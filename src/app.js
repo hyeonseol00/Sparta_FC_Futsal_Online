@@ -1,15 +1,20 @@
-import express from 'express';
-import cookieParser from 'cookie-parser';
-import dotEnv from 'dotenv';
-dotEnv.config();
+require('dotenv').config();
+const express = require('express');
+const { PrismaClient } = require('@prisma/client');
 
+const prisma = new PrismaClient();
 const app = express();
-const PORT = 3000;
-
 app.use(express.json());
-app.use(cookieParser());
-// app.use('/api', []);
 
+const scoreRouter = require('./src/routes/scoreRouter');
+const rankingRouter = require('./src/routes/rankingRouter');
+
+app.use('/api/score', scoreRouter);
+app.use('/api/rankings', rankingRouter);
+
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(PORT, '포트로 서버가 열렸어요!');
 });
+
+module.exports = prisma;
