@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../utils/prisma/index.js';
+import authMiddleware from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
@@ -71,5 +72,87 @@ router.post('/sign-up', async (req, res, next) => {
     next(error);
   }
 });
+
+// 로그인 API
+router.post('/sign-in', async (req, res, next) => {
+  try {
+    const { userId, userPw } = req.body;
+    if (!userId || !userPw) {
+      return res
+        .status(400)
+        .json({ message: '데이터를 올바르게 입력해주세요.' });
+    }
+
+    const user = await prisma.user.findFirst({
+      where: {
+        userId,
+      },
+    });
+    if (!user) {
+      return res.status(401).json({ message: '존재하지 않는 사용자입니다.' });
+    }
+
+    if (!(await bcrypt.compare(userPw, user.userPw))) {
+      return res.status(400).json({ message: '비밀번호가 일치하지 않습니다.' });
+    }
+
+    const token = jwt.sign(
+      {
+        userId: user.userId,
+      },
+      process.env.TOKEN_SECRET_KEY,
+      {
+        expiresIn: '1h',
+      },
+    );
+
+    res.cookie('authorization', `Bearer ${token}`);
+    return res.status(200).json({ token });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 캐시 구매 API
+router.patch(
+  '/user/:userId/showMeTheMoney',
+  authMiddleware,
+  async (req, res, next) => {
+    try {
+      const { userId } = req.params;
+
+      console.log(userId);
+
+      const user = await prisma.user.findFirst({
+        where: {
+          userId,
+        },
+      });
+      if (!user) {
+        return res
+          .status(401)
+          .json({ message: '해당 유저가 존재하지 않습니다.' });
+      }
+
+      const updateUser = await prisma.user.update({
+        data: {
+          cash: user.cash + 5000,
+        },
+        where: {
+          userId,
+        },
+        select: {
+          userId: true,
+          userName: true,
+          cash: true,
+        },
+      });
+
+      return res.status(200).json({ updateUser });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 export default router;
