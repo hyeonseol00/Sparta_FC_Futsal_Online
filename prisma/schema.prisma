@@ -14,7 +14,7 @@ model user {
   cash      Int         @default(10000)     @map("cash")
 
   team      team[]
-  inventory inventory[]
+  owningPlayer owningPlayer[]
   record    record?
 
   @@map("user")
@@ -29,16 +29,16 @@ model player {
   defence          Int                                         @map("defence")
   stamina          Int                                         @map("stamina")
 
-  inventory       inventory[]
+  owningPlayer       owningPlayer[]
   
   @@map("player")
 }
 
-model inventory {
-  inventoryId       Int     @id @default(autoincrement())    @map("inventory_id")
+model owningPlayer {
+  owningPlayerId    Int     @id @default(autoincrement())    @map("owning_player_id")
   userId            String                                   @map("user_id")
   playerId          Int                                      @map("player_id")
-  strengthening     Int         @default(1)                  @map("strengthening")
+  grade             Int         @default(1)                  @map("grade")
   count             Int         @default(1)                  @map("count")
 
   user user  @relation(fields: [userId], references: [userId], onDelete: Cascade)
@@ -48,20 +48,20 @@ model inventory {
   striker         team[]        @relation("StrikerRelation")
   keeper          team[]        @relation("KeeperRelation")
 
-  @@map("inventory")
+  @@map("owning_player")
 }
 
 model team {
-  teamId       Int     @id @default(autoincrement())     @map("team_id")
-  userId       String                                    @map("user_id")
+  teamId      Int     @id @default(autoincrement())     @map("team_id")
+  userId      String                                    @map("user_id")
   defenderId  Int                                       @map("defender_id")
   strikerId   Int                                       @map("striker_id")
   keeperId    Int                                       @map("keeper_id")
 
   user user  @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  defender inventory @relation("DefenderRelation", fields: [defenderId], references: [inventoryId], onDelete: Cascade)
-  striker inventory @relation("StrikerRelation", fields: [strikerId], references: [inventoryId], onDelete: Cascade)
-  keeper inventory @relation("KeeperRelation", fields: [keeperId], references: [inventoryId], onDelete: Cascade)
+  defender owningPlayer @relation("DefenderRelation", fields: [defenderId], references: [owningPlayerId], onDelete: Cascade)
+  striker owningPlayer @relation("StrikerRelation", fields: [strikerId], references: [owningPlayerId], onDelete: Cascade)
+  keeper owningPlayer @relation("KeeperRelation", fields: [keeperId], references: [owningPlayerId], onDelete: Cascade)
 
   @@map("team")
 }
