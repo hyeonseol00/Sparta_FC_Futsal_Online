@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../utils/prisma/index.js';
+import authMiddleware from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
@@ -111,5 +112,47 @@ router.post('/sign-in', async (req, res, next) => {
     next(error);
   }
 });
+
+// 캐시 구매 API
+router.patch(
+  '/user/:userId/showMeTheMoney',
+  authMiddleware,
+  async (req, res, next) => {
+    try {
+      const { userId } = req.params;
+
+      console.log(userId);
+
+      const user = await prisma.user.findFirst({
+        where: {
+          userId,
+        },
+      });
+      if (!user) {
+        return res
+          .status(401)
+          .json({ message: '해당 유저가 존재하지 않습니다.' });
+      }
+
+      const updateUser = await prisma.user.update({
+        data: {
+          cash: user.cash + 5000,
+        },
+        where: {
+          userId,
+        },
+        select: {
+          userId: true,
+          userName: true,
+          cash: true,
+        },
+      });
+
+      return res.status(200).json({ updateUser });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 export default router;
