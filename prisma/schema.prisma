@@ -8,10 +8,10 @@ datasource db {
 }
 
 model user {
-  user_id   Int         @id @default(autoincrement())   @map("user_id")
-  user_name String      @unique                         @map("user_name")
-  user_pw   String                                      @map("user_pw")
-  cash      Int         @default(10000)                 @map("cash")
+  user_id   String      @id                 @map("user_id")
+  user_name String      @unique             @map("user_name")
+  user_pw   String                          @map("user_pw")
+  cash      Int         @default(10000)     @map("cash")
 
   team      team?
   inventory inventory[]
@@ -40,7 +40,7 @@ model player {
 
 model inventory {
   inventory_id  Int     @id @default(autoincrement())    @map("inventory_id")
-  user_id       Int                                      @map("user_id")
+  user_id       String                                   @map("user_id")
   player_id     Int                                      @map("player_id")
 
   user user  @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
@@ -51,7 +51,7 @@ model inventory {
 
 model team {
   team_id       Int     @id @default(autoincrement())     @map("team_id")
-  user_id       Int     @unique                           @map("user_id")
+  user_id       String  @unique                           @map("user_id")
   defender_id   Int                                       @map("defender_id")
   striker_id    Int                                       @map("striker_id")
   keeper_id     Int                                       @map("keeper_id")
@@ -65,11 +65,11 @@ model team {
 }
 
 model record {
-  user_id   Int  @id              @map("user_id")
-  score     Int  @default(1000)   @map("score")
-  win       Int  @default(0)      @map("win")
-  lose      Int  @default(0)      @map("lose")
-  draw      Int  @default(0)      @map("draw")
+  user_id   String  @id              @map("user_id")
+  score     Int     @default(1000)   @map("score")
+  win       Int     @default(0)      @map("win")
+  lose      Int     @default(0)      @map("lose")
+  draw      Int     @default(0)      @map("draw")
   
   user user  @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 
