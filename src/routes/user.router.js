@@ -121,8 +121,6 @@ router.patch(
     try {
       const { userId } = req.params;
 
-      console.log(userId);
-
       const user = await prisma.user.findFirst({
         where: {
           userId,
