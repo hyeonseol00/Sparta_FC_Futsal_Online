@@ -7,52 +7,71 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Character {
-  id            Int             @id @default(autoincrement())
-  name          String
-  appearance    String
-  health        Int             @default(500)
-  power         Int             @default(100)
-  ownerId       Int
-  User          User            @relation(fields: [ownerId], references: [id])
-  CharacterItem CharacterItem[]
+model user {
+  user_id   Int         @id @default(autoincrement())   @map("user_id")
+  user_name String      @unique                         @map("user_name")
+  user_pw   String                                      @map("user_pw")
+  cash      Int         @default(10000)                 @map("cash")
 
-  @@index([ownerId], map: "Character_ownerId_fkey")
+  team      team?
+  inventory inventory[]
+  record    record?
+
+  @@map("user")
 }
 
-model CharacterItem {
-  id          Int       @id @default(autoincrement())
-  characterId Int
-  itemId      Int
-  Character   Character @relation(fields: [characterId], references: [id])
-  Item        Item      @relation(fields: [itemId], references: [id])
+model player {
+  player_id         Int         @id @default(autoincrement())   @map("player_id")
+  player_name       String                                      @map("player_name")
+  speed             Int                                         @map("speed")
+  goal_decision     Int                                         @map("goal_decision")
+  shoot_power       Int                                         @map("shoot_power")
+  defence           Int                                         @map("defence")
+  stamina           Int                                         @map("stamina")
+  strengthening     Int         @default(1)                     @map("strengthening")
 
-  @@index([characterId], map: "CharacterItem_characterId_fkey")
-  @@index([itemId], map: "CharacterItem_itemId_fkey")
+  inventory       inventory[]
+  defender        team[]        @relation("DefenderRelation")
+  striker        team[]        @relation("StrikerRelation")
+  keeper        team[]        @relation("KeeperRelation")
+  
+  @@map("player")
 }
 
-model Item {
-  id            Int             @id @default(autoincrement())
-  itemCode      Int             @unique
-  itemName      String
-  itemStatId    Int
-  price         Float
-  CharacterItem CharacterItem[]
-  ItemStat      ItemStat        @relation(fields: [itemStatId], references: [id])
+model inventory {
+  inventory_id  Int     @id @default(autoincrement())    @map("inventory_id")
+  user_id       Int                                      @map("user_id")
+  player_id     Int                                      @map("player_id")
 
-  @@index([itemStatId], map: "Item_itemStatId_fkey")
+  user user  @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  player player @relation(fields: [player_id], references: [player_id], onDelete: Cascade)
+
+  @@map("inventory")
 }
 
-model ItemStat {
-  id     Int    @id @default(autoincrement())
-  health Int
-  power  Int
-  Item   Item[]
+model team {
+  team_id       Int     @id @default(autoincrement())     @map("team_id")
+  user_id       Int     @unique                           @map("user_id")
+  defender_id   Int                                       @map("defender_id")
+  striker_id    Int                                       @map("striker_id")
+  keeper_id     Int                                       @map("keeper_id")
+  
+  user user  @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  defender player @relation("DefenderRelation", fields: [defender_id], references: [player_id], onDelete: Cascade)
+  striker player @relation("StrikerRelation", fields: [striker_id], references: [player_id], onDelete: Cascade)
+  keeper player @relation("KeeperRelation", fields: [keeper_id], references: [player_id], onDelete: Cascade)
+
+  @@map("team")
 }
 
-model User {
-  id        Int         @id @default(autoincrement())
-  username  String      @unique
-  password  String
-  Character Character[]
+model record {
+  user_id   Int  @id              @map("user_id")
+  score     Int  @default(1000)   @map("score")
+  win       Int  @default(0)      @map("win")
+  lose      Int  @default(0)      @map("lose")
+  draw      Int  @default(0)      @map("draw")
+  
+  user user  @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@map("record")
 }
