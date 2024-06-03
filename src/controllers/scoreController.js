@@ -1,17 +1,17 @@
-const prisma = require('../../app');
+import prisma from '../app.js';
 
-const handleWin = async (req, res) => {
+export const handleWin = async (req, res) => {
   const { user_id } = req.body;
 
   try {
-    const userRecord = await prisma.record.findUnique({ where: { user_id } });
+    const userRecord = await prisma.record.findUnique({ where: { userId: user_id } });
 
     if (!userRecord) {
       return res.status(404).json({ error: 'User not found' });
     }
 
     const updatedRecord = await prisma.record.update({
-      where: { user_id },
+      where: { userId: user_id },
       data: {
         score: userRecord.score + 10,
         win: userRecord.win + 1,
@@ -24,18 +24,18 @@ const handleWin = async (req, res) => {
   }
 };
 
-const handleLose = async (req, res) => {
+export const handleLose = async (req, res) => {
   const { user_id } = req.body;
 
   try {
-    const userRecord = await prisma.record.findUnique({ where: { user_id } });
+    const userRecord = await prisma.record.findUnique({ where: { userId: user_id } });
 
     if (!userRecord) {
       return res.status(404).json({ error: 'User not found' });
     }
 
     const updatedRecord = await prisma.record.update({
-      where: { user_id },
+      where: { userId: user_id },
       data: {
         score: userRecord.score - 10,
         lose: userRecord.lose + 1,
@@ -48,18 +48,18 @@ const handleLose = async (req, res) => {
   }
 };
 
-const handleDraw = async (req, res) => {
+export const handleDraw = async (req, res) => {
   const { user_id } = req.body;
 
   try {
-    const userRecord = await prisma.record.findUnique({ where: { user_id } });
+    const userRecord = await prisma.record.findUnique({ where: { userId: user_id } });
 
     if (!userRecord) {
       return res.status(404).json({ error: 'User not found' });
     }
 
     const updatedRecord = await prisma.record.update({
-      where: { user_id },
+      where: { userId: user_id },
       data: {
         draw: userRecord.draw + 1,
       },
@@ -70,5 +70,3 @@ const handleDraw = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
-module.exports = { handleWin, handleLose, handleDraw };

@@ -1,8 +1,8 @@
-const express = require('express');
-const { getRankings } = require('../controllers/rankingController');
+import express from 'express';
+import { getRankings } from '../controllers/rankingController.js';
 
 const router = express.Router();
 
 router.get('/', getRankings);
 
-module.exports = router;
+export default router;
