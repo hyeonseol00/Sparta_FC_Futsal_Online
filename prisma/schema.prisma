@@ -8,73 +8,72 @@ datasource db {
 }
 
 model user {
-  userId   String      @id                 @map("user_id")
-  userName String      @unique             @map("user_name")
-  userPw   String                          @map("user_pw")
-  cash      Int         @default(10000)     @map("cash")
-
-  team      team[]
-  inventory inventory[]
-  record    record?
+  userId        String          @id @map("user_id")
+  userName      String          @unique @map("user_name")
+  userPw        String          @map("user_pw")
+  cash          Int             @default(10000) @map("cash")
+  owning_player owning_player[]
+  record        record?
+  team          team[]
 
   @@map("user")
 }
 
 model player {
-  playerId         Int         @id @default(autoincrement())   @map("player_id")
-  playerName       String                                      @map("player_name")
-  speed            Int                                         @map("speed")
-  goalDecision     Int                                         @map("goal_decision")
-  shootPower       Int                                         @map("shoot_power")
-  defence          Int                                         @map("defence")
-  stamina          Int                                         @map("stamina")
+  playerId      Int             @id @default(autoincrement()) @map("player_id")
+  playerName    String          @map("player_name")
+  speed         Int             @map("speed")
+  goalDecision  Int             @map("goal_decision")
+  shootPower    Int             @map("shoot_power")
+  defence       Int             @map("defence")
+  stamina       Int             @map("stamina")
+  owning_player owning_player[]
 
-  inventory       inventory[]
-  
   @@map("player")
 }
 
-model inventory {
-  inventoryId       Int     @id @default(autoincrement())    @map("inventory_id")
-  userId            String                                   @map("user_id")
-  playerId          Int                                      @map("player_id")
-  strengthening     Int         @default(1)                  @map("strengthening")
-  count             Int         @default(1)                  @map("count")
-
-  user user  @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  player player @relation(fields: [playerId], references: [playerId], onDelete: Cascade)
-
-  defender        team[]        @relation("DefenderRelation")
-  striker         team[]        @relation("StrikerRelation")
-  keeper          team[]        @relation("KeeperRelation")
-
-  @@map("inventory")
-}
-
 model team {
-  teamId       Int     @id @default(autoincrement())     @map("team_id")
-  userId       String                                    @map("user_id")
-  defenderId  Int                                       @map("defender_id")
-  strikerId   Int                                       @map("striker_id")
-  keeperId    Int                                       @map("keeper_id")
+  teamId     Int           @id @default(autoincrement()) @map("team_id")
+  userId     String        @map("user_id")
+  defenderId Int           @map("defender_id")
+  strikerId  Int           @map("striker_id")
+  keeperId   Int           @map("keeper_id")
+  defender   owning_player @relation("DefenderRelation", fields: [defenderId], references: [owning_player_id], onDelete: Cascade)
+  keeper     owning_player @relation("KeeperRelation", fields: [keeperId], references: [owning_player_id], onDelete: Cascade)
+  striker    owning_player @relation("StrikerRelation", fields: [strikerId], references: [owning_player_id], onDelete: Cascade)
+  user       user          @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
-  user user  @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  defender inventory @relation("DefenderRelation", fields: [defenderId], references: [inventoryId], onDelete: Cascade)
-  striker inventory @relation("StrikerRelation", fields: [strikerId], references: [inventoryId], onDelete: Cascade)
-  keeper inventory @relation("KeeperRelation", fields: [keeperId], references: [inventoryId], onDelete: Cascade)
-
+  @@index([defenderId], map: "team_defender_id_fkey")
+  @@index([keeperId], map: "team_keeper_id_fkey")
+  @@index([strikerId], map: "team_striker_id_fkey")
+  @@index([userId], map: "team_user_id_fkey")
   @@map("team")
 }
 
 model record {
-  userId   String   @id              @map("user_id")
-  score     Int     @default(1000)   @map("score")
-  win       Int     @default(0)      @map("win")
-  lose      Int     @default(0)      @map("lose")
-  draw      Int     @default(0)      @map("draw")
-  rank      Int                      @map("rank")
-  
-  user user  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  userId String @id @map("user_id")
+  score  Int    @default(1000) @map("score")
+  win    Int    @default(0) @map("win")
+  lose   Int    @default(0) @map("lose")
+  draw   Int    @default(0) @map("draw")
+  rank   Int    @map("rank")
+  user   user   @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
   @@map("record")
+}
+
+model owning_player {
+  owning_player_id Int    @id @default(autoincrement())
+  user_id          String
+  player_id        Int
+  grade            Int    @default(1)
+  count            Int    @default(1)
+  player           player @relation(fields: [player_id], references: [playerId], onDelete: Cascade)
+  user             user   @relation(fields: [user_id], references: [userId], onDelete: Cascade)
+  defender         team[] @relation("DefenderRelation")
+  keeper           team[] @relation("KeeperRelation")
+  striker          team[] @relation("StrikerRelation")
+
+  @@index([player_id], map: "owning_player_player_id_fkey")
+  @@index([user_id], map: "owning_player_user_id_fkey")
 }
