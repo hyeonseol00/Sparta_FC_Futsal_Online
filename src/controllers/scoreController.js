@@ -1,4 +1,4 @@
-import prisma from '../utils/prisma/index.js';
+import { prisma } from '../utils/prisma/index.js';
 
 export const handleWin = async (user_id) => {
   try {
