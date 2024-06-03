@@ -1,6 +1,10 @@
 import express from 'express';
+<<<<<<< HEAD:src/routes/rankingRouter.js
 import { getRankings } from '../controllers/rankingController.js';
 import authMiddleware from '../middlewares/auth.middleware.js';
+=======
+import { getRankings } from '../logics/ranking.logic.js';
+>>>>>>> c51af6b95abe1e372a2d28e49fea09927958e882:src/routes/ranking.router.js
 
 const router = express.Router();
 
