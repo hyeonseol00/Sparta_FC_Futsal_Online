@@ -13,7 +13,7 @@ const PORT = 3000;
 
 app.use(express.json());
 app.use(cookieParser());
-app.use('/api', [GamePlayRouter, userRouter, owningPlayerRouter, teamRouter]);
+app.use('/api', [gamePlayRouter, userRouter, owningPlayerRouter, teamRouter]);
 app.use(errorHandlerMiddleware);
 
 app.listen(PORT, () => {
