@@ -19,6 +19,6 @@ export const getRankings = async (req, res) => {
 
     res.json({ rankings: formattedRankings });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err); // 오류 발생 시 중앙 오류 처리 미들웨어로 전달
   }
 };
