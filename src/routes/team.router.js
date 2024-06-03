@@ -63,26 +63,31 @@ router.patch('/team/:teamId', authMiddleware, async (req, res, next) => {
 
     const { isExistDefender, isExistStriker, isExistKeeper } = check;
 
-    const defenderName = await prisma.player.findFirst({
-      where: { playerId: isExistDefender.playerId },
-      select: { playerName: true },
+    const playerOrder = [
+      isExistDefender.playerId,
+      isExistStriker.playerId,
+      isExistKeeper.playerId,
+    ];
+
+    const players = await prisma.player.findMany({
+      where: {
+        OR: [
+          { playerId: isExistDefender.playerId },
+          { playerId: isExistStriker.playerId },
+          { playerId: isExistKeeper.playerId },
+        ],
+      },
     });
 
-    const strikerName = await prisma.player.findFirst({
-      where: { playerId: isExistStriker.playerId },
-      select: { playerName: true },
-    });
-
-    const keeperName = await prisma.player.findFirst({
-      where: { playerId: isExistKeeper.playerId },
-      select: { playerName: true },
-    });
+    const names = playerOrder.map((playerId) =>
+      players.find((player) => playerId == player.playerId),
+    );
 
     await prisma.$transaction(
       async (tx) =>
         await tx.team.update({
           where: {
-            userId: req.user.userId,
+            userId: userId,
             teamId: +teamId,
           },
           data: {
@@ -94,9 +99,9 @@ router.patch('/team/:teamId', authMiddleware, async (req, res, next) => {
     );
 
     return res.status(200).json({
-      defender: defenderName,
-      striker: strikerName,
-      keeper: keeperName,
+      defender: names[0].playerName,
+      striker: names[1].playerName,
+      keeper: names[2].playerName,
     });
   } catch (error) {
     return res.status(401).json({ message: '잘못된 접근입니다.' });
@@ -151,9 +156,7 @@ async function Check(userId, defenderId, strikerId, keeperId) {
       owningPlayerId: keeperId,
     },
   });
-  console.log(isExistDefender);
-  console.log(isExistStriker);
-  console.log(isExistKeeper);
+
   if (!isExistDefender || !isExistStriker || !isExistKeeper) return 'error_0';
 
   if (
