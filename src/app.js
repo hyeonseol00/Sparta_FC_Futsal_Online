@@ -7,6 +7,7 @@ import gamePlayRouter from './routes/game-play.router.js';
 import userRouter from './routes/user.router.js';
 import owningPlayerRouter from './routes/owning_player.router.js';
 import teamRouter from './routes/team.router.js';
+import matchHistoryRouter from './routes/match-history.router.js';
 
 
 const app = express();

@@ -81,3 +81,23 @@ model record {
 
   @@map("record")
 }
+
+model matchHistory {
+  matchId       Int      @id @default(autoincrement()) @map("match_id")
+  userIdA       String                                @map("user_id_a")
+  userIdB       String                                @map("user_id_b")
+  teamIdA       Int                                   @map("team_id_a")
+  teamIdB       Int                                   @map("team_id_b")
+  resultA       String                                @map("result_a")
+  resultB       String                                @map("result_b")
+  scoreChangeA  Int                                   @map("score_change_a")
+  scoreChangeB  Int                                   @map("score_change_b")
+  matchTime     DateTime @default(now())              @map("match_time")
+
+  userA user @relation("userMatches", fields: [userIdA], references: [userId])
+  userB user @relation("opponentMatches", fields: [userIdB], references: [userId])
+  teamA team @relation(fields: [teamIdA], references: [teamId])
+  teamB team @relation(fields: [teamIdB], references: [teamId])
+
+  @@map("match_history")
+}
