@@ -16,6 +16,8 @@ model user {
   team      team[]
   owningPlayer owningPlayer[]
   record    record?
+  matchHistoryA matchHistory[] @relation("userMatches")
+  matchHistoryB matchHistory[] @relation("opponentMatches")
 
   @@map("user")
 }
@@ -66,6 +68,9 @@ model team {
   striker owningPlayer @relation("StrikerRelation", fields: [strikerId], references: [owningPlayerId], onDelete: Cascade)
   keeper owningPlayer @relation("KeeperRelation", fields: [keeperId], references: [owningPlayerId], onDelete: Cascade)
 
+  matchHistoryAsA matchHistory[] @relation("teamAMatches")
+  matchHistoryAsB matchHistory[] @relation("teamBMatches")
+
   @@map("team")
 }
 
@@ -96,8 +101,8 @@ model matchHistory {
 
   userA user @relation("userMatches", fields: [userIdA], references: [userId])
   userB user @relation("opponentMatches", fields: [userIdB], references: [userId])
-  teamA team @relation(fields: [teamIdA], references: [teamId])
-  teamB team @relation(fields: [teamIdB], references: [teamId])
+  teamA team @relation("teamAMatches", fields: [teamIdA], references: [teamId])
+  teamB team @relation("teamBMatches", fields: [teamIdB], references: [teamId])
 
   @@map("match_history")
 }

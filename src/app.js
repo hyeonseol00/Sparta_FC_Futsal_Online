@@ -13,7 +13,7 @@ import matchHistoryRouter from './routes/match-history.router.js';
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
-app.use('/api', [gamePlayRouter, userRouter, owningPlayerRouter, teamRouter, rankingRouter]);
+app.use('/api', [gamePlayRouter, userRouter, owningPlayerRouter, teamRouter, rankingRouter, matchHistoryRouter]);
 app.use(errorHandlerMiddleware);
 
 const PORT = process.env.PORT || 3000;
