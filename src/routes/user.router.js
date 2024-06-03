@@ -153,30 +153,12 @@ router.patch(
   },
 );
 
-// 선수 뽑기 기능
-router.get('/user/pickup',authMiddleware, async (req, res, next) => {
-  try {
-    // 데이터베이스에서 모든 선수 조회
-    const players = await prisma.player.findMany();
-
-    if(!players || players.length ===0){
-      return res.status(404).json({message: "선수가 없습니다."});
-    }
-    //현재 시간을 기준으로 랜덤 인덱스값 설정
-    const randomIndex = new Date().getTime() % players.length;
-    const randomPlayer = players[randomIndex];
-
-    return res.status(201).json({randomPlayer});
-  } catch (error) {
-    next(error);
-  }
-});
 
 // 뽑은 선수 유저에 넣기
-router.patch('/user/:userId/pickup', authMiddleware, async (req, res, next) => {
+router.patch('/user/pickup', authMiddleware, async (req, res, next) => {
   try {
     // 유저 정보 조회
-    const { userId } = req.params;
+    const { userId } = req.user;
 
     if (!userId) {
       return res.status(400).json({ message: '유저 ID가 필요합니다.' });
@@ -242,7 +224,6 @@ router.patch('/user/:userId/pickup', authMiddleware, async (req, res, next) => {
         data: {
           userId: userId,
           playerId: randomPlayer.playerId,
-          grade: 0,
           count: 1,
         },
       });
