@@ -118,7 +118,7 @@ router.post('/team', authMiddleware, async (req, res, next) => {
       .json({ message: '한 선수가 두개의 항목을 차지할 수 없습니다.' });
   }
 
-  await prisma.team.create({
+  const newTeam = await prisma.team.create({
     data: {
       userId: req.user.userId,
       defenderId: defenderId,
@@ -126,8 +126,8 @@ router.post('/team', authMiddleware, async (req, res, next) => {
       keeperId: keeperId,
     },
   });
-
-  return res.status(201).json({ message: '생성 성공!' });
+  const newTeamId = newTeam.teamId;
+  return res.status(201).json({ TeamId: newTeamId, message: '생성 성공!' });
 });
 
 async function Check(userId, defenderId, strikerId, keeperId) {
