@@ -8,6 +8,7 @@ datasource db {
 }
 
 model user {
+<<<<<<< HEAD
   userId        String          @id @map("user_id")
   userName      String          @unique @map("user_name")
   userPw        String          @map("user_pw")
@@ -15,11 +16,22 @@ model user {
   owning_player owning_player[]
   record        record?
   team          team[]
+=======
+  userId   String      @id                 @map("user_id")
+  userName String      @unique             @map("user_name")
+  userPw   String                          @map("user_pw")
+  cash      Int         @default(10000)     @map("cash")
+
+  team      team[]
+  owningPlayer owningPlayer[]
+  record    record?
+>>>>>>> b1b37bd42a14f41fc01029fb89c381a29b2adc2f
 
   @@map("user")
 }
 
 model player {
+<<<<<<< HEAD
   playerId      Int             @id @default(autoincrement()) @map("player_id")
   playerName    String          @map("player_name")
   speed         Int             @map("speed")
@@ -47,10 +59,55 @@ model team {
   @@index([keeperId], map: "team_keeper_id_fkey")
   @@index([strikerId], map: "team_striker_id_fkey")
   @@index([userId], map: "team_user_id_fkey")
+=======
+  playerId         Int         @id @default(autoincrement())   @map("player_id")
+  playerName       String                                      @map("player_name")
+  speed            Int                                         @map("speed")
+  goalDecision     Int                                         @map("goal_decision")
+  shootPower       Int                                         @map("shoot_power")
+  defence          Int                                         @map("defence")
+  stamina          Int                                         @map("stamina")
+
+  owningPlayer       owningPlayer[]
+  
+  @@map("player")
+}
+
+model owningPlayer {
+  owningPlayerId    Int     @id @default(autoincrement())    @map("owning_player_id")
+  userId            String                                   @map("user_id")
+  playerId          Int                                      @map("player_id")
+  grade             Int         @default(1)                  @map("grade")
+  count             Int         @default(1)                  @map("count")
+
+  user user  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  player player @relation(fields: [playerId], references: [playerId], onDelete: Cascade)
+
+  defender        team[]        @relation("DefenderRelation")
+  striker         team[]        @relation("StrikerRelation")
+  keeper          team[]        @relation("KeeperRelation")
+
+  @@map("owning_player")
+}
+
+model team {
+  teamId      Int     @id @default(autoincrement())     @map("team_id")
+  userId      String                                    @map("user_id")
+  defenderId  Int                                       @map("defender_id")
+  strikerId   Int                                       @map("striker_id")
+  keeperId    Int                                       @map("keeper_id")
+
+  user user  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  defender owningPlayer @relation("DefenderRelation", fields: [defenderId], references: [owningPlayerId], onDelete: Cascade)
+  striker owningPlayer @relation("StrikerRelation", fields: [strikerId], references: [owningPlayerId], onDelete: Cascade)
+  keeper owningPlayer @relation("KeeperRelation", fields: [keeperId], references: [owningPlayerId], onDelete: Cascade)
+
+>>>>>>> b1b37bd42a14f41fc01029fb89c381a29b2adc2f
   @@map("team")
 }
 
 model record {
+<<<<<<< HEAD
   userId String @id @map("user_id")
   score  Int    @default(1000) @map("score")
   win    Int    @default(0) @map("win")
@@ -77,3 +134,16 @@ model owning_player {
   @@index([player_id], map: "owning_player_player_id_fkey")
   @@index([user_id], map: "owning_player_user_id_fkey")
 }
+=======
+  userId   String   @id              @map("user_id")
+  score     Int     @default(1000)   @map("score")
+  win       Int     @default(0)      @map("win")
+  lose      Int     @default(0)      @map("lose")
+  draw      Int     @default(0)      @map("draw")
+  rank      Int                      @map("rank")
+  
+  user user  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("record")
+}
+>>>>>>> b1b37bd42a14f41fc01029fb89c381a29b2adc2f
