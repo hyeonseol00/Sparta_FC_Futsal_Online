@@ -158,7 +158,7 @@ router.patch(
 router.patch('/user/pickup', authMiddleware, async (req, res, next) => {
   try {
     // 유저 정보 조회
-    const { userId } = req.body;
+    const { userId } = req.user;
 
     if (!userId) {
       return res.status(400).json({ message: '유저 ID가 필요합니다.' });
