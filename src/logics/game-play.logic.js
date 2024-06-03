@@ -10,28 +10,56 @@ const weight = {
 };
 
 async function playGame(userATeamId, userBTeamId) {
-  const userATeamList = await prisma.team.findFirst({ where: { teamId: +userATeamId } });
-  const userBTeamList = await prisma.team.findFirst({ where: { teamId: +userBTeamId } });
+  const userATeamList = await prisma.team.findFirst({
+    where: { teamId: +userATeamId },
+  });
+  const userBTeamList = await prisma.team.findFirst({
+    where: { teamId: +userBTeamId },
+  });
 
   const userATeamOwningPlayer = {
-    striker: await prisma.owningPlayer.findFirst({ where: { owningPlayerId: +userATeamList.strikerId } }),
-    defender: await prisma.owningPlayer.findFirst({ where: { owningPlayerId: +userATeamList.defenderId } }),
-    keeper: await prisma.owningPlayer.findFirst({ where: { owningPlayerId: +userATeamList.keeperId } }),
+    striker: await prisma.owningPlayer.findFirst({
+      where: { owningPlayerId: +userATeamList.strikerId },
+    }),
+    defender: await prisma.owningPlayer.findFirst({
+      where: { owningPlayerId: +userATeamList.defenderId },
+    }),
+    keeper: await prisma.owningPlayer.findFirst({
+      where: { owningPlayerId: +userATeamList.keeperId },
+    }),
   };
   const userBTeamOwningPlayer = {
-    striker: await prisma.owningPlayer.findFirst({ where: { owningPlayerId: +userBTeamList.strikerId } }),
-    defender: await prisma.owningPlayer.findFirst({ where: { owningPlayerId: +userBTeamList.defenderId } }),
-    keeper: await prisma.owningPlayer.findFirst({ where: { owningPlayerId: +userBTeamList.keeperId } }),
+    striker: await prisma.owningPlayer.findFirst({
+      where: { owningPlayerId: +userBTeamList.strikerId },
+    }),
+    defender: await prisma.owningPlayer.findFirst({
+      where: { owningPlayerId: +userBTeamList.defenderId },
+    }),
+    keeper: await prisma.owningPlayer.findFirst({
+      where: { owningPlayerId: +userBTeamList.keeperId },
+    }),
   };
   const userATeam = {
-    striker: await prisma.player.findFirst({ where: { playerId: +userATeamOwningPlayer.striker.playerId } }),
-    defender: await prisma.player.findFirst({ where: { playerId: +userATeamOwningPlayer.defender.playerId } }),
-    keeper: await prisma.player.findFirst({ where: { playerId: +userATeamOwningPlayer.keeper.playerId } }),
+    striker: await prisma.player.findFirst({
+      where: { playerId: +userATeamOwningPlayer.striker.playerId },
+    }),
+    defender: await prisma.player.findFirst({
+      where: { playerId: +userATeamOwningPlayer.defender.playerId },
+    }),
+    keeper: await prisma.player.findFirst({
+      where: { playerId: +userATeamOwningPlayer.keeper.playerId },
+    }),
   };
   const userBTeam = {
-    striker: await prisma.player.findFirst({ where: { playerId: +userBTeamOwningPlayer.striker.playerId } }),
-    defender: await prisma.player.findFirst({ where: { playerId: +userBTeamOwningPlayer.defender.playerId } }),
-    keeper: await prisma.player.findFirst({ where: { playerId: +userBTeamOwningPlayer.keeper.playerId } }),
+    striker: await prisma.player.findFirst({
+      where: { playerId: +userBTeamOwningPlayer.striker.playerId },
+    }),
+    defender: await prisma.player.findFirst({
+      where: { playerId: +userBTeamOwningPlayer.defender.playerId },
+    }),
+    keeper: await prisma.player.findFirst({
+      where: { playerId: +userBTeamOwningPlayer.keeper.playerId },
+    }),
   };
 
   // 스탯 정규화
@@ -77,10 +105,18 @@ async function playGame(userATeamId, userBTeamId) {
 
   // 룰렛
   const scoreSum = userATeamPower + userBTeamPower;
-  const userA = await prisma.user.findFirst({ where: { userId: userATeamList.userId } });
-  const userB = await prisma.user.findFirst({ where: { userId: userBTeamList.userId } });
-  const userARecord = await prisma.record.findFirst({ where: { userId: userATeamList.userId } });
-  const userBRecord = await prisma.record.findFirst({ where: { userId: userBTeamList.userId } });
+  const userA = await prisma.user.findFirst({
+    where: { userId: userATeamList.userId },
+  });
+  const userB = await prisma.user.findFirst({
+    where: { userId: userBTeamList.userId },
+  });
+  const userARecord = await prisma.record.findFirst({
+    where: { userId: userATeamList.userId },
+  });
+  const userBRecord = await prisma.record.findFirst({
+    where: { userId: userBTeamList.userId },
+  });
 
   const aScore = Math.floor(Math.random() * 4) + 2; // 2에서 5 사이
   const bScore = Math.floor(Math.random() * Math.min(3, aScore)); // aScore보다 작은 값을 설정
