@@ -1,14 +1,8 @@
-import prisma from '../app.js';
+import prisma from '../utils/prisma/index.js';
 
-export const handleWin = async (req, res) => {
-  const { user_id } = req.body;
-
+export const handleWin = async (user_id) => {
   try {
     const userRecord = await prisma.record.findUnique({ where: { userId: user_id } });
-
-    if (!userRecord) {
-      return res.status(404).json({ error: 'User not found' });
-    }
 
     const updatedRecord = await prisma.record.update({
       where: { userId: user_id },
@@ -18,21 +12,15 @@ export const handleWin = async (req, res) => {
       },
     });
 
-    res.json({ message: '게임에서 승리하였습니다.', new_score: updatedRecord.score });
+    return { message: '게임에서 승리하였습니다.', new_score: updatedRecord.score };
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    throw new Error(err.message);
   }
 };
 
-export const handleLose = async (req, res) => {
-  const { user_id } = req.body;
-
+export const handleLose = async (user_id) => {
   try {
     const userRecord = await prisma.record.findUnique({ where: { userId: user_id } });
-
-    if (!userRecord) {
-      return res.status(404).json({ error: 'User not found' });
-    }
 
     const updatedRecord = await prisma.record.update({
       where: { userId: user_id },
@@ -42,21 +30,15 @@ export const handleLose = async (req, res) => {
       },
     });
 
-    res.json({ message: '게임에서 패배하였습니다.', new_score: updatedRecord.score });
+    return { message: '게임에서 패배하였습니다.', new_score: updatedRecord.score };
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    throw new Error(err.message);
   }
 };
 
-export const handleDraw = async (req, res) => {
-  const { user_id } = req.body;
-
+export const handleDraw = async (user_id) => {
   try {
     const userRecord = await prisma.record.findUnique({ where: { userId: user_id } });
-
-    if (!userRecord) {
-      return res.status(404).json({ error: 'User not found' });
-    }
 
     const updatedRecord = await prisma.record.update({
       where: { userId: user_id },
@@ -65,8 +47,8 @@ export const handleDraw = async (req, res) => {
       },
     });
 
-    res.json({ message: '무승부', new_score: updatedRecord.score });
+    return { message: '무승부', new_score: updatedRecord.score };
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    throw new Error(err.message);
   }
 };
