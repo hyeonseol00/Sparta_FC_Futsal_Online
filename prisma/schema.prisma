@@ -120,8 +120,8 @@ model matchHistory {
   scoreChangeA Int      @map("score_change_a")
   scoreChangeB Int      @map("score_change_b")
   matchTime    DateTime @default(now()) @map("match_time")
-  teamAScore   Int		@map("team_a_score")
-  teamBScore   Int		@map("team_b_score")
+  teamAScore   Int      @map("team_a_score")
+  teamBScore   Int      @map("team_b_score")
   teamA        team     @relation("teamAMatches", fields: [teamIdA], references: [teamId])
   teamB        team     @relation("teamBMatches", fields: [teamIdB], references: [teamId])
   userA        user     @relation("userMatches", fields: [userIdA], references: [userId])
@@ -135,37 +135,38 @@ model matchHistory {
 }
 
 model tournament {
-  tournament_id    Int               @id @unique(map: "tournament_id_UNIQUE") @default(autoincrement())
-  scheduled_time   DateTime          @db.DateTime(0)
-  winner_team_id   Int?
-  reward_player_id Int
-  player           player            @relation(fields: [reward_player_id], references: [playerId], onDelete: NoAction, onUpdate: NoAction, map: "reward_player_id_fkey")
-  team             team?             @relation(fields: [winner_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "winner_team_id_fkey")
-  tournament_entry tournament_entry?
-  tournament_match tournament_match?
+  tournamentId        Int               @id @unique(map: "tournament_id_UNIQUE") @default(autoincrement()) @map("tournament_id")
+  scheduledTime       DateTime          @db.DateTime(0) @map("scheduled_time")
+  winnerTeamId	      Int?				@map("winner_team_id")
+  rewardPlayerId      Int				@map("reward_player_id")
+  rewardPlayerGrade	  Int				@map("reward_player_grade")
+  player              player            @relation(fields: [reward_player_id, reward_player_grade], references: [playerId, grade], onDelete: NoAction, onUpdate: NoAction, map: "reward_player_id_fkey")
+  team                team?             @relation(fields: [winner_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "winner_team_id_fkey")
+  tournament_entry    tournament_entry?
+  tournament_match    tournament_match?
 
-  @@index([reward_player_id], map: "reward_player_id_fkey_idx")
+  @@index([reward_player_id, reward_player_grade], map: "reward_player_id_fkey_idx")
   @@index([winner_team_id], map: "winner_team_id_fkey_idx")
 }
 
-model tournament_entry {
-  tournament_id                              Int        @id @unique(map: "tournament_id_UNIQUE")
-  entry1_team_id                             Int?
-  entry2_team_id                             Int?
-  entry3_team_id                             Int?
-  entry4_team_id                             Int?
-  entry5_team_id                             Int?
-  entry6_team_id                             Int?
-  entry7_team_id                             Int?
-  entry8_team_id                             Int?
-  entry1_ready                               Int?       @db.TinyInt
-  entry2_ready                               Int?       @db.TinyInt
-  entry3_ready                               Int?       @db.TinyInt
-  entry4_ready                               Int?       @db.TinyInt
-  entry5_ready                               Int?       @db.TinyInt
-  entry6_ready                               Int?       @db.TinyInt
-  entry7_ready                               Int?       @db.TinyInt
-  entry8_ready                               Int?       @db.TinyInt
+model tournamentEntry {
+  tournamentId                              Int        @id @unique(map: "tournament_id_UNIQUE") @map("tournament_id")
+  entry1TeamId                               Int?		@map("entry1_team_id")
+  entry2TeamId                               Int?		@map("entry2_team_id")
+  entry3TeamId                               Int?		@map("entry3_team_id")
+  entry4TeamId                               Int?		@map("entry4_team_id")
+  entry5TeamId                               Int?		@map("entry5_team_id")
+  entry6TeamId                               Int?		@map("entry6_team_id")
+  entry7TeamId                               Int?		@map("entry7_team_id")
+  entry8TeamId                               Int?		@map("entry8_team_id")
+  entry1Ready                                Int?       @db.TinyInt @map("entry1_ready")
+  entry2Ready                                Int?       @db.TinyInt @map("entry2_ready")
+  entry3Ready                                Int?       @db.TinyInt @map("entry3_ready")
+  entry4Ready                                Int?       @db.TinyInt @map("entry4_ready")
+  entry5Ready                                Int?       @db.TinyInt @map("entry5_ready")
+  entry6Ready                                Int?       @db.TinyInt @map("entry6_ready")
+  entry7Ready                                Int?       @db.TinyInt @map("entry7_ready")
+  entry8Ready                                Int?       @db.TinyInt @map("entry8_ready")
   team_tournament_entry_entry1_team_idToteam team?      @relation("tournament_entry_entry1_team_idToteam", fields: [entry1_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_entry1_team_id_fkey")
   team_tournament_entry_entry2_team_idToteam team?      @relation("tournament_entry_entry2_team_idToteam", fields: [entry2_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_entry2_team_id_fkey")
   team_tournament_entry_entry3_team_idToteam team?      @relation("tournament_entry_entry3_team_idToteam", fields: [entry3_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_entry3_team_id_fkey")
@@ -184,24 +185,25 @@ model tournament_entry {
   @@index([entry6_team_id], map: "tournament_entry6_team_id_fkey_idx")
   @@index([entry7_team_id], map: "tournament_entry7_team_id_fkey_idx")
   @@index([entry8_team_id], map: "tournament_entry8_team_id_fkey_idx")
+  @@map("tournament_entry")
 }
 
-model tournament_match {
-  tournament_id                                      Int        @id @unique(map: "tournament_id_UNIQUE")
-  quater1_user_a_team_id                             Int?
-  quater1_user_b_team_id                             Int?
-  quater2_user_a_team_id                             Int?
-  quater2_user_b_team_id                             Int?
-  quater3_user_a_team_id                             Int?
-  quater3_user_b_team_id                             Int?
-  quater4_user_a_team_id                             Int?
-  quater4_user_b_team_id                             Int?
-  semi1_user_a_team_id                               Int?
-  semi1_user_b_team_id                               Int?
-  semi2_user_a_team_id                               Int?
-  semi2_user_b_team_id                               Int?
-  final_user_a_team_id                               Int?
-  final_user_b_team_id                               Int?
+model tournamentMatch {
+  tournamentId                                       Int        @id @unique(map: "tournament_id_UNIQUE") @map("tournament_id")
+  quater1UserATeamId                                 Int?		@map("quater1_user_a_team_id")
+  quater1UserBTeamId                                 Int?		@map("quater1_user_b_team_id")
+  quater2UserATeamId                                 Int?		@map("quater2_user_a_team_id")
+  quater2UserBTeamId                                 Int?		@map("quater2_user_b_team_id")
+  quater3UserATeamId                                 Int?		@map("quater3_user_a_team_id")
+  quater3UserBTeamId                                 Int?		@map("quater3_user_b_team_id")
+  quater4UserATeamId                                 Int?		@map("quater4_user_a_team_id")
+  quater4UserBTeamId                                 Int?		@map("quater4_user_b_team_id")
+  semi1UserATeamId                                   Int?		@map("semi1_user_a_team_id")
+  semi1UserBTeamId                                   Int?		@map("semi1_user_b_team_id")
+  semi2UserATeamId                                   Int?		@map("semi2_user_a_team_id")
+  semi2UserBTeamId                                   Int?		@map("semi2_user_b_team_id")
+  finalUserATeamId                                   Int?		@map("final_user_a_team_id")
+  finalUserBTeamId                                   Int?		@map("final_user_b_team_id")
   team_tournament_match_final_user_a_team_idToteam   team?      @relation("tournament_match_final_user_a_team_idToteam", fields: [final_user_a_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_f_a_team_id_fkey")
   team_tournament_match_final_user_b_team_idToteam   team?      @relation("tournament_match_final_user_b_team_idToteam", fields: [final_user_b_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_f_b_team_id_fkey")
   tournament                                         tournament @relation(fields: [tournament_id], references: [tournament_id], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_id_fkey")
@@ -233,4 +235,5 @@ model tournament_match {
   @@index([semi2_user_a_team_id], map: "tournament_match_s2_a_team_id_fkey_idx")
   @@index([semi2_user_b_team_id], map: "tournament_match_s2_b_team_id_fkey_idx")
   @@index([quater1_user_a_team_id, quater1_user_b_team_id, quater2_user_a_team_id, quater2_user_b_team_id, quater3_user_a_team_id, quater3_user_b_team_id, quater4_user_a_team_id, quater4_user_b_team_id, semi1_user_a_team_id, semi1_user_b_team_id, semi2_user_a_team_id, semi2_user_b_team_id, final_user_a_team_id, final_user_b_team_id], map: "tournament_match_team_id_fkey_idx")
+  @@map("tournament_match")
 }
