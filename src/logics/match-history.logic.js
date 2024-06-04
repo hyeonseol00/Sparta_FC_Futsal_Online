@@ -5,8 +5,6 @@ export const getMatchHistory = async (req, res, next) => {
   try {
     const { userId } = req.params;
 
-    console.log("Fetching match history for userId:", userId);  // 로깅 추가
-
     // 해당 유저의 경기 기록을 조회
     const matches = await prisma.matchHistory.findMany({
       where: {
@@ -38,12 +36,14 @@ export const getMatchHistory = async (req, res, next) => {
       resultB: match.resultB,
       scoreChangeA: match.scoreChangeA,
       scoreChangeB: match.scoreChangeB,
+      teamAScore: match.teamAScore,  
+      teamBScore: match.teamBScore,
       matchTime: match.matchTime
     }));
 
     res.json({ matches: formattedMatches });
   } catch (error) {
-    console.error("Error fetching match history:", error);  // 에러 로그 잡기 
+    console.error(" 오류가 발생했습니다 ! :", error);  // 에러 로그 잡기 
     next(error);
   }
 };
