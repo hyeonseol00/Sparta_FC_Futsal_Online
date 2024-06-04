@@ -22,7 +22,7 @@ model user {
 }
 
 model player {
-  playerId     Int            @default(autoincrement()) @map("player_id")
+  playerId     Int            @unique @default(autoincrement()) @map("player_id")
   playerName   String         @map("player_name")
   speed        Int            @map("speed")
   goalDecision Int            @map("goal_decision")
@@ -120,6 +120,8 @@ model matchHistory {
   scoreChangeA Int      @map("score_change_a")
   scoreChangeB Int      @map("score_change_b")
   matchTime    DateTime @default(now()) @map("match_time")
+  teamAScore   Int		@map("team_a_score")
+  teamBScore   Int		@map("team_b_score")
   teamA        team     @relation("teamAMatches", fields: [teamIdA], references: [teamId])
   teamB        team     @relation("teamBMatches", fields: [teamIdB], references: [teamId])
   userA        user     @relation("userMatches", fields: [userIdA], references: [userId])
