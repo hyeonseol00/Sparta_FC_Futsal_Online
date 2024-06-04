@@ -23,9 +23,9 @@ const explodedProbability = 0.1; //10%
 router.patch('/reinforce', authMiddleware, async (req, res, next) => {
   try {
     const { userId } = req.user;
-    const { playerId, grade } = req.body;
+    const { playerName, grade } = req.body;
 
-    if (!playerId || !grade) {
+    if (!playerName || !grade) {
       return res
         .status(400)
         .json({ message: '데이터를 올바르게 입력해주세요.' });
@@ -37,15 +37,25 @@ router.patch('/reinforce', authMiddleware, async (req, res, next) => {
         .json({ message: '강화는 최대 10카 까지만 가능합니다.' });
     }
 
+    const playerInfo = await prisma.player.findFirst({
+      where: {
+        playerName,
+        grade,
+      },
+    });
+    if (!playerInfo) {
+      return res.status(401).json({ message: '존재하지 않는 선수입니다.' });
+    }
+
     const owningPlayer = await prisma.owningPlayer.findFirst({
       where: {
         userId,
-        playerId,
+        playerId: playerInfo.playerId,
         grade,
       },
     });
     if (!owningPlayer) {
-      return res.status(401).json({ message: '갖고 있지 않은 선수입니다.' });
+      return res.status(401).json({ message: '소유 중이지 않은 선수입니다.' });
     }
 
     if (owningPlayer.count < 2) {
@@ -56,8 +66,6 @@ router.patch('/reinforce', authMiddleware, async (req, res, next) => {
 
     const successProbability = enhancementProbability[grade];
     const random = Math.random();
-
-    console.log(random);
 
     if (owningPlayer.count === 2) {
       await prisma.owningPlayer.delete({
@@ -102,22 +110,29 @@ router.patch('/reinforce', authMiddleware, async (req, res, next) => {
       result = '실패';
     }
 
-    const gradePlayer = await prisma.owningPlayer.findFirst({
+    const gradePlayerInfo = await prisma.player.findFirst({
       where: {
-        userId,
-        playerId,
+        playerName,
         grade: updateGrade,
       },
     });
 
-    if (gradePlayer) {
+    const owningGradePlayer = await prisma.owningPlayer.findFirst({
+      where: {
+        userId,
+        playerId: gradePlayerInfo.playerId,
+        grade: gradePlayerInfo.grade,
+      },
+    });
+
+    if (owningGradePlayer) {
       // 이미 +1 카드가 보유 선수에 존재 한다면
       await prisma.owningPlayer.update({
         data: {
-          count: gradePlayer.count + 1,
+          count: owningGradePlayer.count + 1,
         },
         where: {
-          owningPlayerId: gradePlayer.owningPlayerId,
+          owningPlayerId: owningGradePlayer.playerId,
         },
       });
     } else {
@@ -125,8 +140,8 @@ router.patch('/reinforce', authMiddleware, async (req, res, next) => {
       await prisma.owningPlayer.create({
         data: {
           userId,
-          playerId,
-          grade: updateGrade,
+          playerId: gradePlayerInfo.playerId,
+          grade: gradePlayerInfo.grade,
         },
       });
     }
