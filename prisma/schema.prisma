@@ -68,11 +68,14 @@ model team {
   user                                                           user               @relation(fields: [userId], references: [userId], onDelete: Cascade)
   tournament                                                     tournament[]
   tournamentEntry                                                tournamentEntry[]
+  team_entry_a        tournamentMatch[] @relation("match_team_a")
+  team_entry_b        tournamentMatch[] @relation("match_team_b")
 
   @@index([defenderId], map: "team_defender_id_fkey")
   @@index([keeperId], map: "team_keeper_id_fkey")
   @@index([strikerId], map: "team_striker_id_fkey")
   @@index([userId], map: "team_user_id_fkey")
+
   @@map("team")
 }
 
@@ -147,7 +150,9 @@ model tournamentMatch {
   teamAId             Int                                       @map("teamA_id")
   teamBId             Int                                       @map("teamB_id")
 
-  tournament    tournament @relation(fields: [tournamentId], references: [tournamentId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_id_fkey")
+  tournament    tournament      @relation(fields: [tournamentId], references: [tournamentId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_id_fkey")
+  team_a        team            @relation("match_team_a", fields: [teamAId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "team_a_match_id_fkey")
+  team_b        team            @relation("match_team_b", fields: [teamBId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "team_b_match_id_fkey")
 
   @@map("tournament_match")
 }
