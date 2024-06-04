@@ -9,6 +9,7 @@ import owningPlayerRouter from './routes/owning_player.router.js';
 import teamRouter from './routes/team.router.js';
 import matchHistoryRouter from './routes/match-history.router.js';
 
+dotEnv.config();
 
 const app = express();
 app.use(express.json());
