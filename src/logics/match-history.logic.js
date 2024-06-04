@@ -7,7 +7,9 @@ export const getMatchHistory = async (req, res, next) => {
 
     // 해당 유저의 팀 정보를 조회
     const userTeams = await prisma.team.findMany({
-      where: { userId: userId },
+      where: {
+        userId: userId,
+      },
     });
 
     // 팀 ID 추출
@@ -24,21 +26,25 @@ export const getMatchHistory = async (req, res, next) => {
       include: {
         teamA: true,
         teamB: true,
+        userA: true,
+        userB: true,
       },
-      orderBy: { matchTime: 'desc' }
+      orderBy: {
+        matchTime: 'desc'
+      }
     });
 
-    console.log("Matches found:", matches);
+    console.log("Matches found:", matches);  // 로깅 추가
 
     // 각 팀의 기록을 조회하여 점수 변동을 실시간 반영
     const formattedMatches = await Promise.all(matches.map(async (match) => {
       const teamAScore = await prisma.record.findUnique({
-        where: { userId: match.teamA.userId },
+        where: { userId: match.userIdA },
         select: { score: true }
       });
 
       const teamBScore = await prisma.record.findUnique({
-        where: { userId: match.teamB.userId },
+        where: { userId: match.userIdB },
         select: { score: true }
       });
 
@@ -49,7 +55,7 @@ export const getMatchHistory = async (req, res, next) => {
         resultB: match.resultB,
         scoreChangeA: match.scoreChangeA,
         scoreChangeB: match.scoreChangeB,
-        teamAScore: teamAScore.score,
+        teamAScore: teamAScore.score,  
         teamBScore: teamBScore.score,
         matchTime: match.matchTime
       };
@@ -57,7 +63,7 @@ export const getMatchHistory = async (req, res, next) => {
 
     res.json({ matches: formattedMatches });
   } catch (error) {
-    console.error(" 오류가 발생했습니다 ! :", error);
+    console.error(" 오류가 발생했습니다 ! :", error);  // 에러 로그 잡기 
     next(error);
   }
 };
