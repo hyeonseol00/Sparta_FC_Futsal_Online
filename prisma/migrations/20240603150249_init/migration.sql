@@ -57,6 +57,22 @@ CREATE TABLE `record` (
     PRIMARY KEY (`user_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `match_history` (
+    `match_id` INTEGER NOT NULL AUTO_INCREMENT,
+    `user_id_a` VARCHAR(191) NOT NULL,
+    `user_id_b` VARCHAR(191) NOT NULL,
+    `team_id_a` INTEGER NOT NULL,
+    `team_id_b` INTEGER NOT NULL,
+    `result_a` VARCHAR(191) NOT NULL,
+    `result_b` VARCHAR(191) NOT NULL,
+    `score_change_a` INTEGER NOT NULL,
+    `score_change_b` INTEGER NOT NULL,
+    `match_time` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`match_id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
 ALTER TABLE `owning_player` ADD CONSTRAINT `owning_player_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `user`(`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -77,3 +93,15 @@ ALTER TABLE `team` ADD CONSTRAINT `team_keeper_id_fkey` FOREIGN KEY (`keeper_id`
 
 -- AddForeignKey
 ALTER TABLE `record` ADD CONSTRAINT `record_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `user`(`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `match_history` ADD CONSTRAINT `match_history_user_id_a_fkey` FOREIGN KEY (`user_id_a`) REFERENCES `user`(`user_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `match_history` ADD CONSTRAINT `match_history_user_id_b_fkey` FOREIGN KEY (`user_id_b`) REFERENCES `user`(`user_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `match_history` ADD CONSTRAINT `match_history_team_id_a_fkey` FOREIGN KEY (`team_id_a`) REFERENCES `team`(`team_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `match_history` ADD CONSTRAINT `match_history_team_id_b_fkey` FOREIGN KEY (`team_id_b`) REFERENCES `team`(`team_id`) ON DELETE RESTRICT ON UPDATE CASCADE;

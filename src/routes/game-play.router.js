@@ -6,7 +6,7 @@ import authMiddleware from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-router.post('/play/:user_b_id', authMiddleware, async (req, res, next) => {
+router.post('/play/:userBId', authMiddleware, async (req, res, next) => {
   try {
     const { userId } = req.user;
     const { userBId } = req.params;
@@ -70,7 +70,7 @@ router.post('/match-making/play', authMiddleware, async (req, res, next) => {
       return res.status(403).json({ errorMessage: `${userA.userName}님이 소유한 팀이 아닙니다!` });
 
     return res.status(201).json({
-      message: `${userBRecord.rank}점 ${userB.userName}님과 매치가 성사되었습니다!`,
+      message: `${userBRecord.score}점 ${userB.userName}님과 매치가 성사되었습니다!`,
       result: `${await playGame(userATeamId, userBTeam.teamId)}`,
     });
   } catch (error) {
