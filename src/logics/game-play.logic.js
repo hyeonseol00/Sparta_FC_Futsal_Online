@@ -119,113 +119,11 @@ async function playGame(userATeamId, userBTeamId) {
 
   const randomValue = Math.random() * scoreSum;
   if (randomValue < userATeamPower) {
-    await prisma.$transaction(
-      async (tx) => {
-        if (userARecord) {
-          await tx.record.update({
-            data: {
-              win: +userARecord.win + 1,
-              score: +userARecord.score + 10,
-            },
-            where: {
-              userId: userATeamList.userId,
-            },
-          });
-        } else {
-          await tx.record.create({
-            data: {
-              userId: userATeamList.userId,
-              win: 1,
-              lose: 0,
-              draw: 0,
-              score: 1010,
-            },
-          });
-        }
-
-        if (userBRecord) {
-          await tx.record.update({
-            data: {
-              lose: +userBRecord.lose + 1,
-              score: +userBRecord.score - 10,
-            },
-            where: {
-              userId: userBTeamList.userId,
-            },
-          });
-        } else {
-          await tx.record.create({
-            data: {
-              userId: userBTeamList.userId,
-              win: 0,
-              lose: 1,
-              draw: 0,
-              score: 990,
-            },
-          });
-        }
-      },
-      {
-        isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
-      },
-    );
-
-    getRankings();
+    await handleWin(userA.userId, userB.userId, userATeamId, userBTeamId, aScore, bScore);
 
     return `${userA.userName} 승리: ${userA.userName} ${aScore} - ${bScore} ${userB.userName}`;
   } else {
-    await prisma.$transaction(
-      async (tx) => {
-        if (userBRecord) {
-          await tx.record.update({
-            data: {
-              win: +userBRecord.win + 1,
-              score: +userBRecord.score + 10,
-            },
-            where: {
-              userId: userBTeamList.userId,
-            },
-          });
-        } else {
-          await tx.record.create({
-            data: {
-              userId: userBTeamList.userId,
-              win: 1,
-              lose: 0,
-              draw: 0,
-              score: 1010,
-            },
-          });
-        }
-
-        if (userARecord) {
-          await tx.record.update({
-            data: {
-              lose: +userARecord.lose + 1,
-              score: +userARecord.score - 10,
-            },
-            where: {
-              userId: userATeamList.userId,
-            },
-          });
-        } else {
-          await tx.record.create({
-            data: {
-              userId: userATeamList.userId,
-              win: 0,
-              lose: 1,
-              draw: 0,
-              score: 990,
-            },
-          });
-        }
-      },
-      {
-        isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
-      },
-    );
-
-    getRankings();
+    await handleWin(userB.userId, userA.userId, userBTeamId, userATeamId, aScore, bScore);
 
     return `${userB.userName} 승리: ${userB.userName} ${aScore} - ${bScore} ${userA.userName}`;
   }
