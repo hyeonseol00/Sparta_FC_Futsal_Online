@@ -1,12 +1,10 @@
 generator client {
   provider = "prisma-client-js"
 }
-
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
-
 model user {
   userId        String         @id @map("user_id")
   userName      String         @unique @map("user_name")
@@ -17,10 +15,8 @@ model user {
   owningPlayer  owningPlayer[]
   record        record?
   team          team[]
-
   @@map("user")
 }
-
 model player {
   playerId     Int            @unique @default(autoincrement()) @map("player_id")
   playerName   String         @map("player_name")
@@ -32,11 +28,9 @@ model player {
   grade        Int            @default(1) @map("grade")
   owningPlayer owningPlayer[]
   tournament   tournament[]
-
   @@id([playerId, grade])
   @@map("player")
 }
-
 model owningPlayer {
   owningPlayerId Int    @id @default(autoincrement()) @map("owning_player_id")
   userId         String @map("user_id")
@@ -48,12 +42,10 @@ model owningPlayer {
   defender       team[] @relation("DefenderRelation")
   keeper         team[] @relation("KeeperRelation")
   striker        team[] @relation("StrikerRelation")
-
   @@index([playerId, grade], map: "owning_player_player_id_grade_fkey")
   @@index([userId], map: "owning_player_user_id_fkey")
   @@map("owning_player")
 }
-
 model team {
   teamId                                                         Int                @id @default(autoincrement()) @map("team_id")
   userId                                                         String             @map("user_id")
@@ -67,36 +59,15 @@ model team {
   striker                                                        owningPlayer       @relation("StrikerRelation", fields: [strikerId], references: [owningPlayerId], onDelete: Cascade)
   user                                                           user               @relation(fields: [userId], references: [userId], onDelete: Cascade)
   tournament                                                     tournament[]
-  tournament_entry_tournament_entry_entry1_team_idToteam         tournament_entry[] @relation("tournament_entry_entry1_team_idToteam")
-  tournament_entry_tournament_entry_entry2_team_idToteam         tournament_entry[] @relation("tournament_entry_entry2_team_idToteam")
-  tournament_entry_tournament_entry_entry3_team_idToteam         tournament_entry[] @relation("tournament_entry_entry3_team_idToteam")
-  tournament_entry_tournament_entry_entry4_team_idToteam         tournament_entry[] @relation("tournament_entry_entry4_team_idToteam")
-  tournament_entry_tournament_entry_entry5_team_idToteam         tournament_entry[] @relation("tournament_entry_entry5_team_idToteam")
-  tournament_entry_tournament_entry_entry6_team_idToteam         tournament_entry[] @relation("tournament_entry_entry6_team_idToteam")
-  tournament_entry_tournament_entry_entry7_team_idToteam         tournament_entry[] @relation("tournament_entry_entry7_team_idToteam")
-  tournament_entry_tournament_entry_entry8_team_idToteam         tournament_entry[] @relation("tournament_entry_entry8_team_idToteam")
-  tournament_match_tournament_match_final_user_a_team_idToteam   tournament_match[] @relation("tournament_match_final_user_a_team_idToteam")
-  tournament_match_tournament_match_final_user_b_team_idToteam   tournament_match[] @relation("tournament_match_final_user_b_team_idToteam")
-  tournament_match_tournament_match_quater1_user_a_team_idToteam tournament_match[] @relation("tournament_match_quater1_user_a_team_idToteam")
-  tournament_match_tournament_match_quater1_user_b_team_idToteam tournament_match[] @relation("tournament_match_quater1_user_b_team_idToteam")
-  tournament_match_tournament_match_quater2_user_a_team_idToteam tournament_match[] @relation("tournament_match_quater2_user_a_team_idToteam")
-  tournament_match_tournament_match_quater2_user_b_team_idToteam tournament_match[] @relation("tournament_match_quater2_user_b_team_idToteam")
-  tournament_match_tournament_match_quater3_user_a_team_idToteam tournament_match[] @relation("tournament_match_quater3_user_a_team_idToteam")
-  tournament_match_tournament_match_quater3_user_b_team_idToteam tournament_match[] @relation("tournament_match_quater3_user_b_team_idToteam")
-  tournament_match_tournament_match_quater4_user_a_team_idToteam tournament_match[] @relation("tournament_match_quater4_user_a_team_idToteam")
-  tournament_match_tournament_match_quater4_user_b_team_idToteam tournament_match[] @relation("tournament_match_quater4_user_b_team_idToteam")
-  tournament_match_tournament_match_semi1_user_a_team_idToteam   tournament_match[] @relation("tournament_match_semi1_user_a_team_idToteam")
-  tournament_match_tournament_match_semi1_user_b_team_idToteam   tournament_match[] @relation("tournament_match_semi1_user_b_team_idToteam")
-  tournament_match_tournament_match_semi2_user_a_team_idToteam   tournament_match[] @relation("tournament_match_semi2_user_a_team_idToteam")
-  tournament_match_tournament_match_semi2_user_b_team_idToteam   tournament_match[] @relation("tournament_match_semi2_user_b_team_idToteam")
-
+  tournamentEntry                                                tournamentEntry[]
+  team_entry_a        tournamentMatch[] @relation("match_team_a")
+  team_entry_b        tournamentMatch[] @relation("match_team_b")
   @@index([defenderId], map: "team_defender_id_fkey")
   @@index([keeperId], map: "team_keeper_id_fkey")
   @@index([strikerId], map: "team_striker_id_fkey")
   @@index([userId], map: "team_user_id_fkey")
   @@map("team")
 }
-
 model record {
   userId String @id @map("user_id")
   score  Int    @default(1000) @map("score")
@@ -105,14 +76,10 @@ model record {
   draw   Int    @default(0) @map("draw")
   rank   Int    @map("rank")
   user   user   @relation(fields: [userId], references: [userId], onDelete: Cascade)
-
   @@map("record")
 }
-
 model matchHistory {
   matchId      Int      @id @default(autoincrement()) @map("match_id")
-  userIdA      String   @map("user_id_a")
-  userIdB      String   @map("user_id_b")
   teamIdA      Int      @map("team_id_a")
   teamIdB      Int      @map("team_id_b")
   resultA      String   @map("result_a")
@@ -120,118 +87,43 @@ model matchHistory {
   scoreChangeA Int      @map("score_change_a")
   scoreChangeB Int      @map("score_change_b")
   matchTime    DateTime @default(now()) @map("match_time")
-  teamAScore   Int      @map("team_a_score")
-  teamBScore   Int      @map("team_b_score")
   teamA        team     @relation("teamAMatches", fields: [teamIdA], references: [teamId])
   teamB        team     @relation("teamBMatches", fields: [teamIdB], references: [teamId])
-  userA        user     @relation("userMatches", fields: [userIdA], references: [userId])
-  userB        user     @relation("opponentMatches", fields: [userIdB], references: [userId])
 
   @@index([teamIdA], map: "match_history_team_id_a_fkey")
   @@index([teamIdB], map: "match_history_team_id_b_fkey")
-  @@index([userIdA], map: "match_history_user_id_a_fkey")
-  @@index([userIdB], map: "match_history_user_id_b_fkey")
   @@map("match_history")
 }
-
 model tournament {
-  tournament_id       Int               @id @unique(map: "tournament_id_UNIQUE") @default(autoincrement())
-  scheduled_time      DateTime          @db.DateTime(0)
-  winner_team_id      Int?
-  reward_player_id    Int
-  reward_player_grade Int
-  player              player            @relation(fields: [reward_player_id, reward_player_grade], references: [playerId, grade], onDelete: NoAction, onUpdate: NoAction, map: "reward_player_id_fkey")
-  team                team?             @relation(fields: [winner_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "winner_team_id_fkey")
-  tournament_entry    tournament_entry?
-  tournament_match    tournament_match?
-
-  @@index([reward_player_id, reward_player_grade], map: "reward_player_id_fkey_idx")
-  @@index([winner_team_id], map: "winner_team_id_fkey_idx")
+  tournamentId        Int               @id @unique(map: "tournament_id_UNIQUE") @default(autoincrement()) @map("tournament_id")
+  scheduledTime       DateTime          @db.DateTime(0) @map("scheduled_time")
+  winnerTeamId	      Int?				      @map("winner_team_id")
+  rewardPlayerId      Int				        @map("reward_player_id")
+  rewardPlayerGrade	  Int				        @map("reward_player_grade")
+  player              player            @relation(fields: [rewardPlayerId, rewardPlayerGrade], references: [playerId, grade], onDelete: NoAction, onUpdate: NoAction, map: "reward_player_id_fkey")
+  team                team?             @relation(fields: [winnerTeamId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "winner_team_id_fkey")
+  tournament_entry    tournamentEntry[]
+  tournament_match    tournamentMatch[]
+  @@index([rewardPlayerId, rewardPlayerGrade], map: "reward_player_id_fkey_idx")
+  @@index([winnerTeamId], map: "winner_team_id_fkey_idx")
 }
-
-model tournament_entry {
-  tournament_id                              Int        @id @unique(map: "tournament_id_UNIQUE")
-  entry1_team_id                             Int?
-  entry2_team_id                             Int?
-  entry3_team_id                             Int?
-  entry4_team_id                             Int?
-  entry5_team_id                             Int?
-  entry6_team_id                             Int?
-  entry7_team_id                             Int?
-  entry8_team_id                             Int?
-  entry1_ready                               Int?       @db.TinyInt
-  entry2_ready                               Int?       @db.TinyInt
-  entry3_ready                               Int?       @db.TinyInt
-  entry4_ready                               Int?       @db.TinyInt
-  entry5_ready                               Int?       @db.TinyInt
-  entry6_ready                               Int?       @db.TinyInt
-  entry7_ready                               Int?       @db.TinyInt
-  entry8_ready                               Int?       @db.TinyInt
-  team_tournament_entry_entry1_team_idToteam team?      @relation("tournament_entry_entry1_team_idToteam", fields: [entry1_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_entry1_team_id_fkey")
-  team_tournament_entry_entry2_team_idToteam team?      @relation("tournament_entry_entry2_team_idToteam", fields: [entry2_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_entry2_team_id_fkey")
-  team_tournament_entry_entry3_team_idToteam team?      @relation("tournament_entry_entry3_team_idToteam", fields: [entry3_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_entry3_team_id_fkey")
-  team_tournament_entry_entry4_team_idToteam team?      @relation("tournament_entry_entry4_team_idToteam", fields: [entry4_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_entry4_team_id_fkey")
-  team_tournament_entry_entry5_team_idToteam team?      @relation("tournament_entry_entry5_team_idToteam", fields: [entry5_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_entry5_team_id_fkey")
-  team_tournament_entry_entry6_team_idToteam team?      @relation("tournament_entry_entry6_team_idToteam", fields: [entry6_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_entry6_team_id_fkey")
-  team_tournament_entry_entry7_team_idToteam team?      @relation("tournament_entry_entry7_team_idToteam", fields: [entry7_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_entry7_team_id_fkey")
-  team_tournament_entry_entry8_team_idToteam team?      @relation("tournament_entry_entry8_team_idToteam", fields: [entry8_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_entry8_team_id_fkey")
-  tournament                                 tournament @relation(fields: [tournament_id], references: [tournament_id], onDelete: NoAction, onUpdate: NoAction, map: "tournament_entry_id_fkey")
-
-  @@index([entry1_team_id], map: "tournament_entry1_team_id_fkey_idx")
-  @@index([entry2_team_id], map: "tournament_entry2_team_id_fkey_idx")
-  @@index([entry3_team_id], map: "tournament_entry3_team_id_fkey_idx")
-  @@index([entry4_team_id], map: "tournament_entry4_team_id_fkey_idx")
-  @@index([entry5_team_id], map: "tournament_entry5_team_id_fkey_idx")
-  @@index([entry6_team_id], map: "tournament_entry6_team_id_fkey_idx")
-  @@index([entry7_team_id], map: "tournament_entry7_team_id_fkey_idx")
-  @@index([entry8_team_id], map: "tournament_entry8_team_id_fkey_idx")
+model tournamentEntry {
+  tournamentEntryId   Int        @id @default(autoincrement())    @map("tournament_entry_id")
+  tournamentId        Int                                         @map("tournament_id")
+  teamId              Int		                                      @map("team_id")
+  ready               Int        @db.TinyInt    @default(0)        @map("ready")
+  tournament    tournament      @relation(fields: [tournamentId], references: [tournamentId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_entry_id_fkey")
+  team          team            @relation(fields: [teamId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "entry_team_id_fkey")
+  @@map("tournament_entry")
 }
-
-model tournament_match {
-  tournament_id                                      Int        @id @unique(map: "tournament_id_UNIQUE")
-  quater1_user_a_team_id                             Int?
-  quater1_user_b_team_id                             Int?
-  quater2_user_a_team_id                             Int?
-  quater2_user_b_team_id                             Int?
-  quater3_user_a_team_id                             Int?
-  quater3_user_b_team_id                             Int?
-  quater4_user_a_team_id                             Int?
-  quater4_user_b_team_id                             Int?
-  semi1_user_a_team_id                               Int?
-  semi1_user_b_team_id                               Int?
-  semi2_user_a_team_id                               Int?
-  semi2_user_b_team_id                               Int?
-  final_user_a_team_id                               Int?
-  final_user_b_team_id                               Int?
-  team_tournament_match_final_user_a_team_idToteam   team?      @relation("tournament_match_final_user_a_team_idToteam", fields: [final_user_a_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_f_a_team_id_fkey")
-  team_tournament_match_final_user_b_team_idToteam   team?      @relation("tournament_match_final_user_b_team_idToteam", fields: [final_user_b_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_f_b_team_id_fkey")
-  tournament                                         tournament @relation(fields: [tournament_id], references: [tournament_id], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_id_fkey")
-  team_tournament_match_quater1_user_a_team_idToteam team?      @relation("tournament_match_quater1_user_a_team_idToteam", fields: [quater1_user_a_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_q1_a_team_id_fkey")
-  team_tournament_match_quater1_user_b_team_idToteam team?      @relation("tournament_match_quater1_user_b_team_idToteam", fields: [quater1_user_b_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_q1_b_team_id_fkey")
-  team_tournament_match_quater2_user_a_team_idToteam team?      @relation("tournament_match_quater2_user_a_team_idToteam", fields: [quater2_user_a_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_q2_a_team_id_fkey")
-  team_tournament_match_quater2_user_b_team_idToteam team?      @relation("tournament_match_quater2_user_b_team_idToteam", fields: [quater2_user_b_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_q2_b_team_id_fkey")
-  team_tournament_match_quater3_user_a_team_idToteam team?      @relation("tournament_match_quater3_user_a_team_idToteam", fields: [quater3_user_a_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_q3_a_team_id_fkey")
-  team_tournament_match_quater3_user_b_team_idToteam team?      @relation("tournament_match_quater3_user_b_team_idToteam", fields: [quater3_user_b_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_q3_b_team_id_fkey")
-  team_tournament_match_quater4_user_a_team_idToteam team?      @relation("tournament_match_quater4_user_a_team_idToteam", fields: [quater4_user_a_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_q4_a_team_id_fkey")
-  team_tournament_match_quater4_user_b_team_idToteam team?      @relation("tournament_match_quater4_user_b_team_idToteam", fields: [quater4_user_b_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_q4_b_team_id_fkey")
-  team_tournament_match_semi1_user_a_team_idToteam   team?      @relation("tournament_match_semi1_user_a_team_idToteam", fields: [semi1_user_a_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_s1_a_team_id_fkey")
-  team_tournament_match_semi1_user_b_team_idToteam   team?      @relation("tournament_match_semi1_user_b_team_idToteam", fields: [semi1_user_b_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_s1_b_team_id_fkey")
-  team_tournament_match_semi2_user_a_team_idToteam   team?      @relation("tournament_match_semi2_user_a_team_idToteam", fields: [semi2_user_a_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_s2_a_team_id_fkey")
-  team_tournament_match_semi2_user_b_team_idToteam   team?      @relation("tournament_match_semi2_user_b_team_idToteam", fields: [semi2_user_b_team_id], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_s2_b_team_id_fkey")
-
-  @@index([final_user_a_team_id], map: "tournament_match_f_a_team_id_fkey_idx")
-  @@index([final_user_b_team_id], map: "tournament_match_f_b_team_id_fkey_idx")
-  @@index([quater1_user_a_team_id], map: "tournament_match_q1_a_team_id_fkey_idx")
-  @@index([quater1_user_b_team_id], map: "tournament_match_q1_b_team_id_fkey_idx")
-  @@index([quater2_user_a_team_id], map: "tournament_match_q2_a_team_id_fkey_idx")
-  @@index([quater2_user_b_team_id], map: "tournament_match_q2_b_team_id_fkey_idx")
-  @@index([quater3_user_a_team_id], map: "tournament_match_q3_a_team_id_fkey_idx")
-  @@index([quater3_user_b_team_id], map: "tournament_match_q3_b_team_id_fkey_idx")
-  @@index([quater4_user_a_team_id], map: "tournament_match_q4_a_team_id_fkey_idx")
-  @@index([quater4_user_b_team_id], map: "tournament_match_q4_b_team_id_fkey_idx")
-  @@index([semi1_user_a_team_id], map: "tournament_match_s1_a_team_id_fkey_idx")
-  @@index([semi1_user_b_team_id], map: "tournament_match_s1_b_team_id_fkey_idx")
-  @@index([semi2_user_a_team_id], map: "tournament_match_s2_a_team_id_fkey_idx")
-  @@index([semi2_user_b_team_id], map: "tournament_match_s2_b_team_id_fkey_idx")
-  @@index([quater1_user_a_team_id, quater1_user_b_team_id, quater2_user_a_team_id, quater2_user_b_team_id, quater3_user_a_team_id, quater3_user_b_team_id, quater4_user_a_team_id, quater4_user_b_team_id, semi1_user_a_team_id, semi1_user_b_team_id, semi2_user_a_team_id, semi2_user_b_team_id, final_user_a_team_id, final_user_b_team_id], map: "tournament_match_team_id_fkey_idx")
+model tournamentMatch {
+  tournamentMatchId   Int     @id   @default(autoincrement())   @map("tournament_match_id")
+  tournamentId        Int                                       @map("tournament_id")
+  roundName           String        @default("quater")          @map("roundName")
+  teamAId             Int                                       @map("teamA_id")
+  teamBId             Int                                       @map("teamB_id")
+  tournament    tournament      @relation(fields: [tournamentId], references: [tournamentId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_id_fkey")
+  team_a        team            @relation("match_team_a", fields: [teamAId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "team_a_match_id_fkey")
+  team_b        team            @relation("match_team_b", fields: [teamBId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "team_b_match_id_fkey")
+  @@map("tournament_match")
 }
