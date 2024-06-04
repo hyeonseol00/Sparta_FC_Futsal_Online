@@ -19,7 +19,7 @@ export const getRankings = async (req, res, next) => {
 
     res.json({ rankings: formattedRankings });
   } catch (err) {
-    console.error("Error fetching rankings:", err);
+    console.error(" 오류가 발생했습니다 ! :", err);
     next(err);
   }
 };
