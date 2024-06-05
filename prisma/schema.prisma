@@ -12,8 +12,6 @@ model user {
   userName      String         @unique @map("user_name")
   userPw        String         @map("user_pw")
   cash          Int            @default(10000) @map("cash")
-  matchHistoryA matchHistory[] @relation("userMatches")
-  matchHistoryB matchHistory[] @relation("opponentMatches")
   owningPlayer  owningPlayer[]
   record        record?
   team          team[]
@@ -31,6 +29,9 @@ model player {
   stamina      Int            @map("stamina")
   grade        Int            @default(1) @map("grade")
   owningPlayer owningPlayer[]
+  defender       team[]       @relation("DefenderRelation")
+  keeper         team[]       @relation("KeeperRelation")
+  striker        team[]       @relation("StrikerRelation")
   tournament   tournament[]
 
   @@id([playerId, grade])
@@ -45,9 +46,6 @@ model owningPlayer {
   count          Int    @default(1) @map("count")
   player         player @relation(fields: [playerId, grade], references: [playerId, grade], onDelete: Cascade)
   user           user   @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  defender       team[] @relation("DefenderRelation")
-  keeper         team[] @relation("KeeperRelation")
-  striker        team[] @relation("StrikerRelation")
 
   @@index([playerId, grade], map: "owning_player_player_id_grade_fkey")
   @@index([userId], map: "owning_player_user_id_fkey")
@@ -62,9 +60,9 @@ model team {
   keeperId                                                       Int                @map("keeper_id")
   matchHistoryAsA                                                matchHistory[]     @relation("teamAMatches")
   matchHistoryAsB                                                matchHistory[]     @relation("teamBMatches")
-  defender                                                       owningPlayer       @relation("DefenderRelation", fields: [defenderId], references: [owningPlayerId], onDelete: Cascade)
-  keeper                                                         owningPlayer       @relation("KeeperRelation", fields: [keeperId], references: [owningPlayerId], onDelete: Cascade)
-  striker                                                        owningPlayer       @relation("StrikerRelation", fields: [strikerId], references: [owningPlayerId], onDelete: Cascade)
+  defender                                                       player       @relation("DefenderRelation", fields: [defenderId], references: [playerId], onDelete: Cascade)
+  keeper                                                         player       @relation("KeeperRelation", fields: [keeperId], references: [playerId], onDelete: Cascade)
+  striker                                                        player       @relation("StrikerRelation", fields: [strikerId], references: [playerId], onDelete: Cascade)
   user                                                           user               @relation(fields: [userId], references: [userId], onDelete: Cascade)
   tournament                                                     tournament[]
   tournamentEntry                                                tournamentEntry[]
@@ -91,8 +89,6 @@ model record {
 
 model matchHistory {
   matchId      Int      @id @default(autoincrement()) @map("match_id")
-  userIdA      String   @map("user_id_a")
-  userIdB      String   @map("user_id_b")
   teamIdA      Int      @map("team_id_a")
   teamIdB      Int      @map("team_id_b")
   resultA      String   @map("result_a")
@@ -104,14 +100,10 @@ model matchHistory {
   teamBScore   Int      @map("team_b_score")
   teamA        team     @relation("teamAMatches", fields: [teamIdA], references: [teamId])
   teamB        team     @relation("teamBMatches", fields: [teamIdB], references: [teamId])
-  userA        user     @relation("userMatches", fields: [userIdA], references: [userId])
-  userB        user     @relation("opponentMatches", fields: [userIdB], references: [userId])
 
 
   @@index([teamIdA], map: "match_history_team_id_a_fkey")
   @@index([teamIdB], map: "match_history_team_id_b_fkey")
-  @@index([userIdA], map: "match_history_user_id_a_fkey")
-  @@index([userIdB], map: "match_history_user_id_b_fkey")
   @@map("match_history")
 }
 
