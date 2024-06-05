@@ -22,9 +22,9 @@ router.post(
       }
 
       if (
-        !roundName.equals('quater') ||
-        !roundName.equals('semi') ||
-        !roundName.equals('final')
+        roundName != 'quater' &&
+        roundName != 'semi' &&
+        roundName != 'final'
       ) {
         return res
           .status(400)
