@@ -22,9 +22,9 @@ router.post(
       }
 
       if (
-        !roundName.equals('quater') ||
-        !roundName.equals('semi') ||
-        !roundName.equals('final')
+        roundName != 'quater' &&
+        roundName != 'semi' &&
+        roundName != 'final'
       ) {
         return res
           .status(400)
@@ -82,8 +82,7 @@ router.post(
           ready: 1,
         },
         where: {
-          tournamentId,
-          teamId: +teamId,
+          tournamentEntryId: entry.tournamentId,
         },
       });
 
@@ -98,24 +97,26 @@ router.post(
         const otherTeam = await prisma.tournamentEntry.findFirst({
           where: {
             tournamentId,
-            otherTeamId,
+            teamId: otherTeamId,
           },
         });
 
         let message;
 
-        if (otherTeam.ready) {
+        if (otherTeam.ready == 1) {
           // 상대 팀 ready가 되었을 때 그대로 게임 진행
           if (match.teamAId === +teamId) {
             // team A 인 유저 요청일 때는 playGame() -> match history() 결과 받기
             const playResult = await playGame(match.teamAId, match.teamBId);
             const splitResult = playResult.split('승리');
-            splitResult = splitResult.map((element) => element.trim()).join('');
-            message = resultMatch(tournamentId, roundName, splitResult[0]);
+            const winner = splitResult
+              .map((element) => element.trim())
+              .join('');
+            message = resultMatch(tournamentId, roundName, winner);
           } else {
             // team B 인 유저 요청일 때는 findFirst() -> 딜레이 -> 못찾으면 다시 findFirst() 찾으면 match history() 결과 받기
             const matchHistory = loopFind(+teamId, otherTeamId, new Date());
-            if (matchHistory.resultA.equals('win')) {
+            if (matchHistory.resultA == 'win') {
               message = resultMatch(
                 tournamentId,
                 roundName,
