@@ -78,35 +78,19 @@ router.post('/match-making/play', authMiddleware, async (req, res, next) => {
   }
 });
 
-//토너먼트 생성
+// 토너먼트 생성
 router.post('/tournament', authMiddleware, async (req, res, next) => {
   try {
-    const { user } = req.user;
-
     const newTournament = await prisma.tournament.create({
       data: {
-        scheduled_time: new Date(),
-        winner_team_id: 1,
-        reward_player_id: 1,
-        reward_player_grade: 0,
+        scheduledTime: new Date(),
+        winnerTeamId: null,        
+        rewardPlayerId: 1,         
+        rewardPlayerGrade: 0,      
       }
     });
 
-    const tournamentEntry = await prisma.tournament_entry.create({
-        data: {
-          entry1_team_id:null,
-          entry2_team_id:null,
-          entry3_team_id:null,
-          entry4_team_id:null,
-          entry5_team_id:null,
-          entry6_team_id:null,
-          entry7_team_id:null,
-          entry8_team_id:null,
-          tournament_id: newTournament.tournament_id,
-        },
-      })
-
-    return res.status(201).json({ message: "토너먼트가 생성되었습니다." });
+    return res.status(201).json({ message: "토너먼트가 생성되었습니다.", tournament: newTournament });
   } catch (error) {
     next(error);
   }
@@ -125,57 +109,41 @@ router.get('/tournament', async(req,res,next)=>{
 router.post('/tournament/:tournamentId/register', authMiddleware, async (req, res, next) => {
   try {
     const { tournamentId } = req.params;
-    const { teamId } = req.body;
+    const { teamId, ready = 0 } = req.body; // 요청 본문에서 ready 값을 받아오고 기본값을 0으로 설정
 
-    const tournament = await prisma.tournament.findUnique({ where: { tournament_id: +(tournamentId) } });
-    const team = await prisma.team.findUnique({ where: { teamId: +(teamId) } });
+    // 토너먼트 및 팀 확인
+    const tournament = await prisma.tournament.findUnique({ where: { tournamentId: +tournamentId } });
+    const team = await prisma.team.findUnique({ where: { teamId: +teamId } });
 
-    if (!tournament) return res.status(404).json({ errorMessage: '토너먼트를 찾을 수 없습니다.' });
-    if (!team) return res.status(404).json({ errorMessage: '팀을 찾을 수 없습니다.' });
-    const tournamentEntry = await prisma.tournament_entry.findUnique({where: { tournament_id: +(tournamentId) } });
+    if (!tournament) {
+      return res.status(404).json({ errorMessage: '토너먼트를 찾을 수 없습니다.' });
+    }
+    if (!team) {
+      return res.status(404).json({ errorMessage: '팀을 찾을 수 없습니다.' });
+    }
 
-    if (!tournamentEntry){
-    return res.status(200).json({ message: '토너먼트 Entry가 존재하지 않습니다.(db 오류)' });
-  }
-
-   // 팀이 이미 토너먼트에 등록되어 있는지 확인
-   const existingEntries = [
-    tournamentEntry.entry1_team_id,
-    tournamentEntry.entry2_team_id,
-    tournamentEntry.entry3_team_id,
-    tournamentEntry.entry4_team_id,
-    tournamentEntry.entry5_team_id,
-    tournamentEntry.entry6_team_id,
-    tournamentEntry.entry7_team_id,
-    tournamentEntry.entry8_team_id
-  ];
-
-  if (existingEntries.includes(+(teamId))) {
-    return res.status(400).json({ errorMessage: '토너먼트에 등록된 팀입니다.' });
-  }
-
-    let updateData = {};
-    if (!tournamentEntry.entry1_team_id) updateData.entry1_team_id = +(teamId);
-    else if (!tournamentEntry.entry2_team_id) updateData.entry2_team_id = +(teamId);
-    else if (!tournamentEntry.entry3_team_id) updateData.entry3_team_id = +(teamId);
-    else if (!tournamentEntry.entry4_team_id) updateData.entry4_team_id = +(teamId);
-    else if (!tournamentEntry.entry5_team_id) updateData.entry5_team_id = +(teamId);
-    else if (!tournamentEntry.entry6_team_id) updateData.entry6_team_id = +(teamId);
-    else if (!tournamentEntry.entry7_team_id) updateData.entry7_team_id = +(teamId);
-    else if (!tournamentEntry.entry8_team_id) updateData.entry8_team_id = +(teamId);
-    else return res.status(400).json({ errorMessage: '토너먼트 자리가 모두 찼습니다.' });
-    
-    const updatedTournamentEntry = await prisma.tournament_entry.update({
-      where: { tournament_id: +(tournamentId) },
-      data: updateData,
+    // 팀이 이미 토너먼트에 등록되어 있는지 확인
+    const existingEntry = await prisma.tournamentEntry.findFirst({
+      where: { teamId: +teamId, tournamentId: +tournamentId },
     });
 
-    return res.status(200).json({ message: '팀이 토너먼트에 등록되었습니다.', tournamentEntry: updatedTournamentEntry });
-  
+    if (existingEntry) {
+      return res.status(400).json({ errorMessage: '팀이 이미 토너먼트에 등록되어 있습니다.' });
+    }
+
+    // 새로운 토너먼트 엔트리 생성
+    const tournamentEntry = await prisma.tournamentEntry.create({
+      data: {
+        tournamentId: +tournamentId,
+        teamId: +teamId,
+        ready: +ready,
+      },
+    });
+
+    return res.status(200).json({ message: '팀이 토너먼트에 등록되었습니다.', tournamentEntry });
   } catch (error) {
     next(error);
   }
 });
-
 
 export default router;
