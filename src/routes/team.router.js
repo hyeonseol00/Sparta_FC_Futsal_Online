@@ -35,7 +35,7 @@ router.get('/team/:teamId', async (req, res, next) => {
       });
 
       content.push(
-        `역활 : ${pos[i]} / 이름: ${findName.playerName} / 등급 : ${findPlayer.grade}`,
+        `역할 : ${pos[i]} / 이름: ${findName.playerName} / 등급 : ${findPlayer.grade}`,
       );
     }
 
