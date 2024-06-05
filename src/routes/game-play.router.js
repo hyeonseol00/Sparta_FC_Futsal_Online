@@ -36,14 +36,15 @@ router.post('/match-making/play', authMiddleware, async (req, res, next) => {
 
     const userA = await prisma.user.findFirst({ where: { userId: userId } });
     const userARecord = await prisma.record.findFirst({ where: { userId: userId } });
+    const userARank = userARecord ? userARecord.rank : 1000;
     const matchedOpponents = await prisma.record.findMany({
       where: {
         NOT: {
-          userId: userARecord.userId,
+          userId: userA.userId,
         },
         rank: {
-          gte: userARecord.rank - 100,
-          lte: userARecord.rank + 100,
+          gte: userARank - 100,
+          lte: userARank + 100,
         },
       },
     });
