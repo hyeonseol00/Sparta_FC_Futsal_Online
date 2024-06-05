@@ -66,8 +66,6 @@ model team {
   user                                                           user               @relation(fields: [userId], references: [userId], onDelete: Cascade)
   tournament                                                     tournament[]
   tournamentEntry                                                tournamentEntry[]
-  team_entry_a        tournamentMatch[] @relation("match_team_a")
-  team_entry_b        tournamentMatch[] @relation("match_team_b")
 
   @@index([defenderId], map: "team_defender_id_fkey")
   @@index([keeperId], map: "team_keeper_id_fkey")
@@ -102,6 +100,7 @@ model matchHistory {
   teamBScore   Int      @map("team_b_score")
   teamA        team     @relation("teamAMatches", fields: [teamIdA], references: [teamId])
   teamB        team     @relation("teamBMatches", fields: [teamIdB], references: [teamId])
+
 
   @@index([teamIdA], map: "match_history_team_id_a_fkey")
   @@index([teamIdB], map: "match_history_team_id_b_fkey")
