@@ -11,6 +11,13 @@ router.post(
     try {
       const { tournamentId } = req.params;
 
+      const isExistList = await prisma.tournamentMatch.findFirst({
+        where: { tournamentId: +tournamentId },
+      });
+
+      if (isExistList)
+        return res.status(401).json({ message: '이미 대진표가 존재합니다!' });
+
       const tnmt = await prisma.tournament.findFirst({
         where: { tournamentId: +tournamentId },
       });
@@ -21,9 +28,8 @@ router.post(
         }),
       );
 
-      if (tnmt.winnerTeamId) {
+      if (tnmt.winnerTeamId)
         return res.status(401).json({ message: '이미 끝난 토너먼트입니다!' });
-      }
 
       if (Math.floor((new Date() - tnmt.scheduledTime) / 1000 / 60) < 60) {
         return res
@@ -31,27 +37,25 @@ router.post(
           .json({ message: '아직 시작되지 않은 토너먼트입니다!' });
       }
 
-      if (entryDatas.length !== 2) {
+      if (entryDatas.length !== 8) {
         return res
           .status(404)
           .json({ message: '현재 토너먼트 유저가 모집되지 않았습니다!' });
       }
 
       let teamIds = entryDatas.map((tn) => tn.teamId);
-
       await prisma.$transaction(async (tx) => {
         for (let i = 1; i <= 4; i++) {
           const randomTeam_A = Math.floor(Math.random() * teamIds.length);
           teamIds.splice(randomTeam_A, 1);
-
           const randomTeam_B = Math.floor(Math.random() * teamIds.length);
           teamIds.splice(randomTeam_B, 1);
 
-          await prisma.tournamentMatch.create({
+          await tx.tournamentMatch.create({
             data: {
               tournamentId: +tournamentId,
-              teamAId: randomTeam_A,
-              teamBId: randomTeam_B,
+              teamAId: randomTeam_A + 1,
+              teamBId: randomTeam_B + 1,
               roundName: `quater${i}`,
             },
           });
