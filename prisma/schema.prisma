@@ -55,26 +55,27 @@ model owningPlayer {
 }
 
 model team {
-  teamId                                           Int               @id @default(autoincrement()) @map("team_id")
-  userId                                           String            @map("user_id")
-  defenderId                                       Int               @map("defender_id")
-  strikerId                                        Int               @map("striker_id")
-  keeperId                                         Int               @map("keeper_id")
-  matchHistoryAsA                                  matchHistory[]    @relation("teamAMatches")
-  matchHistoryAsB                                  matchHistory[]    @relation("teamBMatches")
-  defender                                         owningPlayer      @relation("DefenderRelation", fields: [defenderId], references: [owningPlayerId], onDelete: Cascade)
-  keeper                                           owningPlayer      @relation("KeeperRelation", fields: [keeperId], references: [owningPlayerId], onDelete: Cascade)
-  striker                                          owningPlayer      @relation("StrikerRelation", fields: [strikerId], references: [owningPlayerId], onDelete: Cascade)
-  user                                             user              @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  tournament                                       tournament[]
-  tournamentEntry                                  tournamentEntry[]
-  tournament_match_tournament_match_teamA_idToteam tournamentMatch[] @relation("tournament_match_teamA_idToteam")
-  tournament_match_tournament_match_teamB_idToteam tournamentMatch[] @relation("tournament_match_teamB_idToteam")
+  teamId                                                         Int                @id @default(autoincrement()) @map("team_id")
+  userId                                                         String             @map("user_id")
+  defenderId                                                     Int                @map("defender_id")
+  strikerId                                                      Int                @map("striker_id")
+  keeperId                                                       Int                @map("keeper_id")
+  matchHistoryAsA                                                matchHistory[]     @relation("teamAMatches")
+  matchHistoryAsB                                                matchHistory[]     @relation("teamBMatches")
+  defender                                                       owningPlayer       @relation("DefenderRelation", fields: [defenderId], references: [owningPlayerId], onDelete: Cascade)
+  keeper                                                         owningPlayer       @relation("KeeperRelation", fields: [keeperId], references: [owningPlayerId], onDelete: Cascade)
+  striker                                                        owningPlayer       @relation("StrikerRelation", fields: [strikerId], references: [owningPlayerId], onDelete: Cascade)
+  user                                                           user               @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  tournament                                                     tournament[]
+  tournamentEntry                                                tournamentEntry[]
+  team_entry_a        tournamentMatch[] @relation("match_team_a")
+  team_entry_b        tournamentMatch[] @relation("match_team_b")
 
   @@index([defenderId], map: "team_defender_id_fkey")
   @@index([keeperId], map: "team_keeper_id_fkey")
   @@index([strikerId], map: "team_striker_id_fkey")
   @@index([userId], map: "team_user_id_fkey")
+
   @@map("team")
 }
 
@@ -116,45 +117,43 @@ model matchHistory {
 }
 
 model tournament {
-  tournamentId      Int               @id @unique(map: "tournament_id_UNIQUE") @default(autoincrement()) @map("tournament_id")
-  scheduledTime     DateTime          @map("scheduled_time") @db.DateTime(0)
-  winnerTeamId      Int?              @map("winner_team_id")
-  rewardPlayerId    Int               @map("reward_player_id")
-  rewardPlayerGrade Int               @map("reward_player_grade")
-  player            player            @relation(fields: [rewardPlayerId, rewardPlayerGrade], references: [playerId, grade], onDelete: NoAction, onUpdate: NoAction, map: "reward_player_id_fkey")
-  team              team?             @relation(fields: [winnerTeamId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "winner_team_id_fkey")
-  tournament_entry  tournamentEntry[]
-  tournament_match  tournamentMatch[]
+  tournamentId        Int               @id @unique(map: "tournament_id_UNIQUE") @default(autoincrement()) @map("tournament_id")
+  scheduledTime       DateTime          @db.DateTime(0) @map("scheduled_time")
+  currentRound        String            @default("quater")      @map("current_round")
+  winnerTeamId	      Int?				      @map("winner_team_id")
+  rewardPlayerId      Int				        @map("reward_player_id")
+  rewardPlayerGrade	  Int				        @map("reward_player_grade")
+  player              player            @relation(fields: [rewardPlayerId, rewardPlayerGrade], references: [playerId, grade], onDelete: NoAction, onUpdate: NoAction, map: "reward_player_id_fkey")
+  team                team?             @relation(fields: [winnerTeamId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "winner_team_id_fkey")
+  tournament_entry    tournamentEntry[]
+  tournament_match    tournamentMatch[]
 
   @@index([rewardPlayerId, rewardPlayerGrade], map: "reward_player_id_fkey_idx")
   @@index([winnerTeamId], map: "winner_team_id_fkey_idx")
 }
 
 model tournamentEntry {
-  tournamentEntryId Int        @id @default(autoincrement()) @map("tournament_entry_id")
-  tournamentId      Int        @map("tournament_id")
-  teamId            Int        @map("team_id")
-  ready             Int        @default(0) @map("ready") @db.TinyInt
-  team              team       @relation(fields: [teamId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "entry_team_id_fkey")
-  tournament        tournament @relation(fields: [tournamentId], references: [tournamentId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_entry_id_fkey")
+  tournamentEntryId   Int        @id @default(autoincrement())    @map("tournament_entry_id")
+  tournamentId        Int                                         @map("tournament_id")
+  teamId              Int		                                      @map("team_id")
+  ready               Int        @db.TinyInt    @default(0)       @map("ready")
 
-  @@index([teamId], map: "entry_team_id_fkey")
-  @@index([tournamentId], map: "tournament_entry_id_fkey")
+  tournament    tournament      @relation(fields: [tournamentId], references: [tournamentId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_entry_id_fkey")
+  team          team            @relation(fields: [teamId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "entry_team_id_fkey")
+
   @@map("tournament_entry")
 }
 
 model tournamentMatch {
-  tournamentMatchId                    Int        @id @default(autoincrement()) @map("tournament_match_id")
-  tournamentId                         Int        @map("tournament_id")
-  roundName                            String     @default("quater") @map("roundName")
-  teamAId                              Int?       @map("teamA_id")
-  teamBId                              Int?       @map("teamB_id")
-  team_tournament_match_teamA_idToteam team?      @relation("tournament_match_teamA_idToteam", fields: [teamAId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "team_a_match_id_fkey")
-  team_tournament_match_teamB_idToteam team?      @relation("tournament_match_teamB_idToteam", fields: [teamBId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "team_b_match_id_fkey")
-  tournament                           tournament @relation(fields: [tournamentId], references: [tournamentId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_id_fkey")
+  tournamentMatchId   Int     @id   @default(autoincrement())   @map("tournament_match_id")
+  tournamentId        Int                                       @map("tournament_id")
+  roundName           String        @default("quater")          @map("roundName")
+  teamAId             Int?                                       @map("teamA_id")
+  teamBId             Int?                                       @map("teamB_id")
 
-  @@index([teamAId], map: "team_a_match_id_fkey")
-  @@index([teamBId], map: "team_b_match_id_fkey")
-  @@index([tournamentId], map: "tournament_match_id_fkey")
+  tournament    tournament      @relation(fields: [tournamentId], references: [tournamentId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_id_fkey")
+  team_a        team?           @relation("match_team_a", fields: [teamAId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "team_a_match_id_fkey")
+  team_b        team?           @relation("match_team_b", fields: [teamBId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "team_b_match_id_fkey")
+
   @@map("tournament_match")
 }

@@ -96,20 +96,45 @@ router.post('/tournament', authMiddleware, async (req, res, next) => {
   }
 });
 
-//토너먼트 방 확인 API
-router.get('/tournament', async(req,res,next)=>{
-  const Tournament = await prisma.tournament.findMany();
-  if(!Tournament){
-    return res.status(404).json({message:"토너먼트 방이 존재하지 않습니다."})
+router.get('/tournament', async (req, res, next) => {
+  try {
+    const tournaments = await prisma.tournament.findMany();
+    const tournamentEntries = await prisma.tournamentEntry.findMany();
+
+    if (!tournaments) {
+      return res.status(404).json({ message: "토너먼트 방이 존재하지 않습니다." });
+    }
+
+    const tournamentInfo = [];
+
+    for (let i = 0; i < tournaments.length; i++) {
+      const tournament = tournaments[i];
+
+      let currentParticipants = 0;
+      for (let j = 0; j < tournamentEntries.length; j++) {
+        if (tournamentEntries[j].tournamentId === tournament.tournamentId) {
+          currentParticipants++;
+        }
+      }
+
+      const maxParticipants = 8; 
+      const participantStatus = `(${currentParticipants}/${maxParticipants})`; 
+
+      tournamentInfo.push({ tournament_id: tournament.tournamentId, participants: participantStatus });
+    }
+
+    return res.status(200).json({ tournamentInfo });
+  } catch (error) {
+    next(error);
   }
-  return res.status(200).json({Tournament});
-})
+});
+
 
 // 토너먼트에 유저 등록
 router.post('/tournament/:tournamentId/register', authMiddleware, async (req, res, next) => {
   try {
     const { tournamentId } = req.params;
-    const { teamId, ready = 0 } = req.body; 
+    const { teamId, ready = 0 } = req.body; //ready default 값으로 0
 
     // 토너먼트 및 팀 확인
     const tournament = await prisma.tournament.findUnique({ where: { tournamentId: +tournamentId } });
