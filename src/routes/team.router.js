@@ -291,8 +291,8 @@ async function Check(userId, defenderId, strikerId, keeperId) {
 
   if (
     isExistDefender.count < 1 ||
-    isExistDefender.count < 1 ||
-    isExistDefender.count < 1
+    isExistStriker.count < 1 ||
+    isExistKeeper.count < 1
   ) {
     return 'error_2';
   }
