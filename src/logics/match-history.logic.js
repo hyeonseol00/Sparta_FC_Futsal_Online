@@ -2,7 +2,7 @@ import { prisma } from '../utils/prisma/index.js';
 
 // 유저의 전적을 조회하는 함수
 export async function getMatchHistory(teamId) {
-  // 해당 유저의 팀 정보를 조회
+    // 해당 유저의 팀 정보를 조회
   const team = await prisma.team.findFirst({
     where: {
       teamId,
@@ -14,34 +14,34 @@ export async function getMatchHistory(teamId) {
     });
   }
 
-  const userTeams = await prisma.team.findMany({
-    where: {
+    const userTeams = await prisma.team.findMany({
+      where: {
       userId: team.userId,
-    },
-  });
+      },
+    });
 
-  // 팀 ID 추출
+    // 팀 ID 추출
   const teamIds = userTeams.map((team) => team.teamId);
 
-  // 해당 유저의 경기 기록을 조회
-  const matches = await prisma.matchHistory.findMany({
-    where: {
+    // 해당 유저의 경기 기록을 조회
+    const matches = await prisma.matchHistory.findMany({
+      where: {
       OR: [{ teamIdA: { in: teamIds } }, { teamIdB: { in: teamIds } }],
-    },
-    include: {
-      teamA: true,
-      teamB: true,
-      userA: true,
-      userB: true,
-    },
-    orderBy: {
+      },
+      include: {
+        teamA: true,
+        teamB: true,
+        userA: true,
+        userB: true,
+      },
+      orderBy: {
       matchTime: 'desc',
     },
-  });
+    });
 
   console.log('Matches found:', matches); // 로깅 추가
 
-  // 각 팀의 기록을 조회하여 점수 변동을 실시간 반영
+    // 각 팀의 기록을 조회하여 점수 변동을 실시간 반영
   const formattedMatches = await Promise.all(
     matches.map(async (match) => {
       const teamAScore = await prisma.record.findUnique({
