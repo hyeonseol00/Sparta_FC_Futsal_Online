@@ -25,17 +25,12 @@ router.get('/team/:teamId', async (req, res, next) => {
     const pos = ['defender', 'strikerId', 'keeperId'];
 
     for (let i = 0; i < playerIds.length; i++) {
-      const owningPlayerId = +playerIds[i];
-      const findPlayer = await prisma.owningPlayer.findFirst({
-        where: { owningPlayerId },
-      });
       const findName = await prisma.player.findFirst({
-        where: { playerId: findPlayer.playerId },
-        select: { playerName: true },
+        where: { playerId: playerIds[i] },
       });
 
       content.push(
-        `역활 : ${pos[i]} / 이름: ${findName.playerName} / 등급 : ${findPlayer.grade}`,
+        `역활 : ${pos[i]} / 이름: ${findName.playerName} / 등급 : ${findName.grade}`,
       );
     }
 
@@ -51,56 +46,40 @@ router.patch('/team/:teamId', authMiddleware, async (req, res, next) => {
     const { teamId } = req.params;
     const userId = req.user.userId;
 
-    const check = await Check(userId, defenderId, strikerId, keeperId);
-    if (check == 'error_0') {
+    const nowInsertPlayer = await TakePlayer(
+      userId,
+      defenderId,
+      strikerId,
+      keeperId,
+    );
+    if (nowInsertPlayer == 'error_0') {
       return res
         .status(401)
         .json({ message: '해당 선수가 존재하지 않거나 내 팀이 아닙니다.' });
-    } else if (check == 'error_1') {
+    } else if (nowInsertPlayer == 'error_1') {
       return res
         .status(403)
         .json({ message: '한 선수가 두개의 항목을 차지할 수 없습니다.' });
-    } else if (check == 'error_2') {
-      return res
-        .status(403)
-        .json({ message: '현재 보관함에 해당 선수가 존재하지 않습니다.' });
     }
 
-    const { isExistDefender, isExistStriker, isExistKeeper } = check;
+    //지금 넣으려고 하는 유저 오너링
+    const nowPlayers = [
+      nowInsertPlayer.isExistDefender,
+      nowInsertPlayer.isExistStriker,
+      nowInsertPlayer.isExistKeeper,
+    ];
 
+    //원래 있었던 유저의 id값
     const oldPlayersId = await prisma.team.findFirst({
       where: {
         userId: userId,
       },
-      select: {
-        defenderId: true,
-        strikerId: true,
-        keeperId: true,
-      },
     });
 
-    const oldPlayers = await OldPlayerFindforChange(userId, oldPlayersId);
+    //원래 있었던 유저의 player 레코드를 가져온다.
+    const oldPlayers = await OldPlayers(oldPlayersId);
 
-    const players = await prisma.player.findMany({
-      where: {
-        OR: [
-          { playerId: isExistDefender.playerId },
-          { playerId: isExistStriker.playerId },
-          { playerId: isExistKeeper.playerId },
-        ],
-      },
-    });
-
-    const PlayerArray = [isExistDefender, isExistStriker, isExistKeeper];
-    const playerOrder = [
-      isExistDefender.playerId,
-      isExistStriker.playerId,
-      isExistKeeper.playerId,
-    ];
-    const names = playerOrder.map((playerId) =>
-      players.find((player) => playerId == player.playerId),
-    );
-
+    console.log(nowPlayers[0].playerId);
     await prisma.$transaction(async (tx) => {
       await tx.team.update({
         where: {
@@ -108,39 +87,55 @@ router.patch('/team/:teamId', authMiddleware, async (req, res, next) => {
           teamId: +teamId,
         },
         data: {
-          defenderId: isExistDefender.owningPlayerId,
-          strikerId: isExistStriker.owningPlayerId,
-          keeperId: isExistKeeper.owningPlayerId,
+          defenderId: nowPlayers[0].playerId,
+          strikerId: nowPlayers[1].playerId,
+          keeperId: nowPlayers[2].playerId,
         },
       });
 
-      const newInsertPlayers = await RemoveSamePlayerId(
-        PlayerArray,
-        oldPlayers,
-      );
-
-      for (let i = 0; i < newInsertPlayers[0].length; i++) {
-        await tx.owningPlayer.update({
+      const newInsertPlayers = await RemoveSamePlayerId(nowPlayers, oldPlayers);
+      const newInsertPlayerNames = [];
+      for (let i = 0; i < newInsertPlayers.length; i++) {
+        const player = await tx.owningPlayer.update({
           where: {
             userId: userId,
-            owningPlayerId: newInsertPlayers[0][i].owningPlayerId,
+            owningPlayerId: nowPlayers[i].owningPlayerId,
           },
-          data: { count: newInsertPlayers[0][i].count - 1 },
+          data: { count: nowPlayers[i].count - 1 },
         });
 
-        await tx.owningPlayer.update({
+        ZeroCountPlayersDelete(player);
+
+        const oldPlayer = await tx.owningPlayer.findFirst({
           where: {
             userId: userId,
-            owningPlayerId: newInsertPlayers[1][i].owningPlayerId,
+            owningPlayerId: oldPlayers.playerId,
           },
-          data: { count: newInsertPlayers[1][i].count + 1 },
         });
+
+        if (!oldPlayer) {
+          await prisma.owningPlayer.create({
+            where: {
+              userId: userId,
+              player_id: oldPlayers[i].playerId,
+              grade: oldPlayers[i].grade,
+            },
+          });
+        }
+
+        const nowPlayer = await prisma.player.findFirst({
+          where: {
+            playerId: nowPlayers[i].owningPlayerId,
+          },
+        });
+
+        newInsertPlayerNames.push(nowPlayer.playerName);
       }
 
       return res.status(200).json({
-        defender: names[0].playerName,
-        striker: names[1].playerName,
-        keeper: names[2].playerName,
+        defender: newInsertPlayerNames[0],
+        striker: newInsertPlayerNames[1],
+        keeper: newInsertPlayerNames[2],
       });
     });
   } catch (error) {
@@ -153,7 +148,7 @@ router.post('/team', authMiddleware, async (req, res, next) => {
     const { defenderId, strikerId, keeperId } = req.body;
     const userId = req.user.userId;
 
-    const check = await Check(userId, defenderId, strikerId, keeperId);
+    const check = await TakePlayer(userId, defenderId, strikerId, keeperId);
     if (check == 'error_0') {
       return res
         .status(404)
@@ -162,10 +157,6 @@ router.post('/team', authMiddleware, async (req, res, next) => {
       return res
         .status(400)
         .json({ message: '한 선수가 두개의 항목을 차지할 수 없습니다.' });
-    } else if (check == 'error_2') {
-      return res
-        .status(403)
-        .json({ message: '현재 보관함에 해당 선수가 존재하지 않습니다.' });
     }
 
     await prisma.$transaction(async (tx) => {
@@ -185,13 +176,14 @@ router.post('/team', authMiddleware, async (req, res, next) => {
       ];
 
       for (let i = 0; i < 3; i++) {
-        await tx.owningPlayer.update({
+        const players = await tx.owningPlayer.update({
           where: {
             userId: userId,
             owningPlayerId: idArray[i].owningPlayerId,
           },
           data: { count: idArray[i].count - 1 },
         });
+        ZeroCountPlayersDelete(players);
       }
 
       return res
@@ -258,25 +250,25 @@ router.delete('/team/:teamId', authMiddleware, async (req, res, next) => {
   }
 });
 
-async function Check(userId, defenderId, strikerId, keeperId) {
+async function TakePlayer(userId, defenderId, strikerId, keeperId) {
   const isExistDefender = await prisma.owningPlayer.findFirst({
     where: {
       userId: userId,
-      owningPlayerId: defenderId,
+      playerId: defenderId,
     },
   });
 
   const isExistStriker = await prisma.owningPlayer.findFirst({
     where: {
       userId: userId,
-      owningPlayerId: strikerId,
+      playerId: strikerId,
     },
   });
 
   const isExistKeeper = await prisma.owningPlayer.findFirst({
     where: {
       userId: userId,
-      owningPlayerId: keeperId,
+      playerId: keeperId,
     },
   });
 
@@ -289,36 +281,25 @@ async function Check(userId, defenderId, strikerId, keeperId) {
   )
     return 'error_1';
 
-  if (
-    isExistDefender.count < 1 ||
-    isExistStriker.count < 1 ||
-    isExistKeeper.count < 1
-  ) {
-    return 'error_2';
-  }
-
   return { isExistDefender, isExistStriker, isExistKeeper };
 }
 
-async function OldPlayerFindforChange(userId, oldPlayersId) {
-  const oldDefender = await prisma.owningPlayer.findFirst({
+async function OldPlayers(oldPlayersIds) {
+  const oldDefender = await prisma.player.findFirst({
     where: {
-      userId: userId,
-      owningPlayerId: oldPlayersId.defenderId,
+      playerId: oldPlayersIds.defenderId,
     },
   });
 
-  const oldStriker = await prisma.owningPlayer.findFirst({
+  const oldStriker = await prisma.player.findFirst({
     where: {
-      userId: userId,
-      owningPlayerId: oldPlayersId.strikerId,
+      playerId: oldPlayersIds.strikerId,
     },
   });
 
-  const oldKeeper = await prisma.owningPlayer.findFirst({
+  const oldKeeper = await prisma.player.findFirst({
     where: {
-      userId: userId,
-      owningPlayerId: oldPlayersId.keeperId,
+      playerId: oldPlayersIds.keeperId,
     },
   });
 
@@ -338,6 +319,16 @@ async function RemoveSamePlayerId(arr1, arr2) {
     }
   }
   return [arr1, arr2];
+}
+
+async function ZeroCountPlayersDelete(player) {
+  if (player.count === 0) {
+    await prisma.owningPlayer.delete({
+      where: {
+        owningPlayerId: player.owningPlayerId,
+      },
+    });
+  }
 }
 
 export default router;
