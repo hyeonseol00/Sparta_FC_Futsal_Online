@@ -21,7 +21,7 @@ async function resultMatch(tournamentId, roundName, teamId) {
     nextMatchLength = 1;
   }
 
-  if (roundName.equals('final')) {
+  if (roundName == 'final') {
     // 결승일 때 우승자 처리
     await prisma.tournament.update({
       data: {
