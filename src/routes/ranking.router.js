@@ -6,5 +6,4 @@ const router = express.Router();
 
 router.get('/rankings', authMiddleware, getRankings);
 
-
 export default router;
