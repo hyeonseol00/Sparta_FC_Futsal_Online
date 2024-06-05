@@ -185,7 +185,7 @@ router.patch('/user/pickup', authMiddleware, async (req, res, next) => {
     }
 
     // 현재 시간을 기준으로 랜덤 인덱스값 설정
-    const randomIndex = ((new Date().getTime())*11) % players.length; //강화가 0인 배열만 랜덤으로 가져오기
+    const randomIndex = ((new Date().getTime())*11+1) % players.length; //강화가 0인 배열만 랜덤으로 가져오기
     const randomPlayer = players[randomIndex];
 
     // 유저 정보와 보유 선수 업데이트
