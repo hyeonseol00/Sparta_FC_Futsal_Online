@@ -142,6 +142,7 @@ router.post('/tournament/:tournamentId/register', authMiddleware, async (req, re
       return res.status(404).json({ errorMessage: '팀을 찾을 수 없습니다.' });
     }
 
+  
     // 팀이 이미 토너먼트에 등록되어 있는지 확인
     const existingEntry = await prisma.tournamentEntry.findFirst({
       where: { teamId: +teamId, tournamentId: +tournamentId },
@@ -149,6 +150,15 @@ router.post('/tournament/:tournamentId/register', authMiddleware, async (req, re
 
     if (existingEntry) {
       return res.status(400).json({ errorMessage: '팀이 이미 토너먼트에 등록되어 있습니다.' });
+    }
+
+    // 토너먼트에 등록된 팀 수 확인
+    const teamCount = await prisma.tournamentEntry.count({
+      where: { tournamentId: +tournamentId },
+    });
+
+    if (teamCount >= 8) {
+      return res.status(400).json({ errorMessage: '팀이 다 찼습니다.' });
     }
 
     // 새로운 토너먼트 엔트리 생성
