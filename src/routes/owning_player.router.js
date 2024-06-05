@@ -152,4 +152,29 @@ router.patch('/reinforce', authMiddleware, async (req, res, next) => {
   }
 });
 
+// 보유 중인 선수 조회 API
+router.get('/owning-player', authMiddleware, async (req, res, next) => {
+  try {
+    const { userId } = req.user;
+    const ownPlayerList = await prisma.owningPlayer.findMany({
+      where: {
+        NOT: {
+          count: 0,
+        },
+        userId,
+      },
+      select: {
+        owningPlayerId: true,
+        playerId: true,
+        grade: true,
+        count: true,
+      },
+    });
+
+    return res.status(200).json(ownPlayerList);
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

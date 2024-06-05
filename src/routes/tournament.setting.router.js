@@ -39,23 +39,26 @@ router.post(
 
       let teamIds = entryDatas.map((tn) => tn.teamId);
 
-      for (let i = 0; i < 4; i++) {
-        const randomTeam_A = Math.floor(Math.random() * teamIds.length);
-        teamIds.splice(randomTeam_A, 1);
+      await prisma.$transaction(async (tx) => {
+        for (let i = 1; i <= 4; i++) {
+          const randomTeam_A = Math.floor(Math.random() * teamIds.length);
+          teamIds.splice(randomTeam_A, 1);
 
-        const randomTeam_B = Math.floor(Math.random() * teamIds.length);
-        teamIds.splice(randomTeam_B, 1);
+          const randomTeam_B = Math.floor(Math.random() * teamIds.length);
+          teamIds.splice(randomTeam_B, 1);
 
-        await prisma.tournamentMatch.create({
-          data: {
-            tournamentId: +tournamentId,
-            teamAId: randomTeam_A,
-            teamBId: randomTeam_B,
-          },
-        });
-      }
+          await prisma.tournamentMatch.create({
+            data: {
+              tournamentId: +tournamentId,
+              teamAId: randomTeam_A,
+              teamBId: randomTeam_B,
+              roundName: `quater${i}`,
+            },
+          });
+        }
 
-      return res.status(201).json({ message: '대진표가 완성되었습니다!' });
+        return res.status(201).json({ message: '대진표가 완성되었습니다!' });
+      });
     } catch (error) {
       next(error);
     }

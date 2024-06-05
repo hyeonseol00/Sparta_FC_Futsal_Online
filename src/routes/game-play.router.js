@@ -34,21 +34,21 @@ router.post('/match-making/play', authMiddleware, async (req, res, next) => {
     const { userId } = req.user;
     const { userATeamId } = req.body;
 
-    const userA = await prisma.user.findFirst({ where: { userId: userId } });
-    const userARecord = await prisma.record.findFirst({ where: { userId: userId } });
-    const userARank = userARecord ? userARecord.rank : 1000;
+    const userA = await prisma.user.findFirst({ where: { userId } });
+    const userARecord = await prisma.record.findFirst({ where: { userId } });
+    const userAScore = userARecord ? userARecord.score : 1000;
     const matchedOpponents = await prisma.record.findMany({
       where: {
         NOT: {
-          userId: userA.userId,
+          userId,
         },
-        rank: {
-          gte: userARank - 100,
-          lte: userARank + 100,
+        score: {
+          gte: userAScore - 100,
+          lte: userAScore + 100,
         },
       },
     });
-    if (!matchedOpponents)
+    if (!matchedOpponents[0])
       return res.status(404).json({ errorMessage: '매치 조건에 맞는 유저를 찾을 수 없습니다.' });
     const userBRecord = matchedOpponents[Math.floor(Math.random() * matchedOpponents.length)];
     const userB = await prisma.user.findFirst({ where: { userId: userBRecord.userId } });

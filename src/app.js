@@ -8,38 +8,27 @@ import userRouter from './routes/user.router.js';
 import owningPlayerRouter from './routes/owning_player.router.js';
 import teamRouter from './routes/team.router.js';
 import matchHistoryRouter from './routes/match-history.router.js';
-<<<<<<< HEAD
-import tournamentSetting from './routes/tournament.setting.router.js';
-=======
 import tournamentEndRouter from './routes/tournament-end.router.js';
+import tournamentSetting from './routes/tournament.setting.router.js';
 
 dotEnv.config();
->>>>>>> 47ad41497c8d1ca5289f7f405604dca650d9a1e9
 
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
-<<<<<<< HEAD
-app.use('/api', [
-=======
 
 const routers = [
->>>>>>> 47ad41497c8d1ca5289f7f405604dca650d9a1e9
   gamePlayRouter,
   userRouter,
   owningPlayerRouter,
   teamRouter,
   rankingRouter,
   matchHistoryRouter,
-<<<<<<< HEAD
-  tournamentSetting,
-]);
-=======
   tournamentEndRouter,
+  tournamentSetting,
 ];
 
 app.use('/api', routers);
->>>>>>> 47ad41497c8d1ca5289f7f405604dca650d9a1e9
 app.use(errorHandlerMiddleware);
 
 const PORT = process.env.PORT || 3000;
