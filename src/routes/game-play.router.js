@@ -207,6 +207,14 @@ router.post(
       return res.status(400).json({ errorMessage: '팀이 이미 토너먼트에 등록되어 있습니다.' });
     }
 
+     // 토너먼트에 등록된 팀 수 확인
+     const teamCount = await prisma.tournamentEntry.count({
+      where: { tournamentId: +tournamentId },
+    });
+    if (teamCount >= 8) {
+      return res.status(400).json({ errorMessage: '팀이 다 찼습니다.' });
+    }
+
       // 새로운 토너먼트 엔트리 생성
       const tournamentEntry = await prisma.tournamentEntry.create({
         data: {
