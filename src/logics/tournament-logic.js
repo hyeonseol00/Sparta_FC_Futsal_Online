@@ -117,4 +117,4 @@ async function loopFind(teamAId, teamBId, curTime) {
   }, 3000);
 }
 
-export { resultMatch, loopFind };
+export { resultMatch , loopFind };
