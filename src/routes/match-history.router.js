@@ -4,21 +4,15 @@ import authMiddleware from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-router.get('/history/:userId', authMiddleware, async (req, res, next) => {
+router.get('/history', authMiddleware, async (req, res, next) => {
   try {
-    const { userId } = req.params;
     const authenticatedUserId = req.user.userId;
 
-    // userId가 숫자인 경우 에러 처리
-    if (!isNaN(userId)) {
+    if (!isNaN(authenticatedUserId)) {
       throw new Error('유효하지 않은 userId 입니다.');
     }
 
-    if (userId !== authenticatedUserId) {
-      return res.status(403).json({ message: '본인의 전적만 조회할 수 있습니다.' });
-    }
-
-    const formattedMatches = await getMatchHistory(userId);
+    const formattedMatches = await getMatchHistory(authenticatedUserId);
     return res.json({ matches: formattedMatches });
   } catch (error) {
     if (error.message === '유효하지 않은 userId 입니다.' || error.message === '경기 기록이 없습니다!') {
