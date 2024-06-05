@@ -1,51 +1,57 @@
 import { prisma } from '../utils/prisma/index.js';
 
 // 유저의 전적을 조회하는 함수
-export const getMatchHistory = async (req, res, next) => {
-  try {
-    const { userId } = req.params;
-
-    // 해당 유저의 팀 정보를 조회
-    const userTeams = await prisma.team.findMany({
-      where: {
-        userId: userId,
-      },
+async function getMatchHistory(teamId) {
+  // 해당 유저의 팀 정보를 조회
+  const team = await prisma.team.findFirst({
+    where: {
+      teamId,
+    },
+  });
+  if (!team) {
+    return res.status(401).json({
+      message: '해당 팀 아이디가 존재하지 않습니다.',
     });
+  }
 
-    // 팀 ID 추출
-    const teamIds = userTeams.map(team => team.teamId);
+  const userTeams = await prisma.team.findMany({
+    where: {
+      userId: team.userId,
+    },
+  });
 
-    // 해당 유저의 경기 기록을 조회
-    const matches = await prisma.matchHistory.findMany({
-      where: {
-        OR: [
-          { teamIdA: { in: teamIds } },
-          { teamIdB: { in: teamIds } }
-        ]
-      },
-      include: {
-        teamA: true,
-        teamB: true,
-        userA: true,
-        userB: true,
-      },
-      orderBy: {
-        matchTime: 'desc'
-      }
-    });
+  // 팀 ID 추출
+  const teamIds = userTeams.map((team) => team.teamId);
 
-    console.log("Matches found:", matches);  // 로깅 추가
+  // 해당 유저의 경기 기록을 조회
+  const matches = await prisma.matchHistory.findMany({
+    where: {
+      OR: [{ teamIdA: { in: teamIds } }, { teamIdB: { in: teamIds } }],
+    },
+    include: {
+      teamA: true,
+      teamB: true,
+      userA: true,
+      userB: true,
+    },
+    orderBy: {
+      matchTime: 'desc',
+    },
+  });
 
-    // 각 팀의 기록을 조회하여 점수 변동을 실시간 반영
-    const formattedMatches = await Promise.all(matches.map(async (match) => {
+  console.log('Matches found:', matches); // 로깅 추가
+
+  // 각 팀의 기록을 조회하여 점수 변동을 실시간 반영
+  const formattedMatches = await Promise.all(
+    matches.map(async (match) => {
       const teamAScore = await prisma.record.findUnique({
         where: { userId: match.userIdA },
-        select: { score: true }
+        select: { score: true },
       });
 
       const teamBScore = await prisma.record.findUnique({
         where: { userId: match.userIdB },
-        select: { score: true }
+        select: { score: true },
       });
 
       return {
@@ -55,15 +61,32 @@ export const getMatchHistory = async (req, res, next) => {
         resultB: match.resultB,
         scoreChangeA: match.scoreChangeA,
         scoreChangeB: match.scoreChangeB,
-        teamAScore: teamAScore.score,  
+        teamAScore: teamAScore.score,
         teamBScore: teamBScore.score,
-        matchTime: match.matchTime
+        matchTime: match.matchTime,
       };
-    }));
+    }),
+  );
 
-    res.json({ matches: formattedMatches });
-  } catch (error) {
-    console.error(" 오류가 발생했습니다 ! :", error);  // 에러 로그 잡기 
-    next(error);
-  }
-};
+  return formattedMatches;
+}
+
+async function getTournamentMatchHistory(teamAId, teamBId, curTime) {
+  const t = curTime - 10 * 1000;
+  const history = await prisma.matchHistory.findFirst({
+    where: {
+      OR: [
+        { teamIdA: { in: teamAId }, teamIdB: { in: teamBId } },
+        { teamIdA: { in: teamBId }, teamIdB: { in: teamAId } },
+      ],
+      matchTime: {
+        gte: t,
+        lte: curTime,
+      },
+    },
+  });
+
+  return history;
+}
+
+export { getMatchHistory, getTournamentMatchHistory };
