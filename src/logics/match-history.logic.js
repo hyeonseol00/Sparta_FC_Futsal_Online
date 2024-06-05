@@ -1,7 +1,7 @@
 import { prisma } from '../utils/prisma/index.js';
 
 // 유저의 전적을 조회하는 함수
-export async function getMatchHistory(teamId) {
+async function getMatchHistory(teamId) {
   // 해당 유저의 팀 정보를 조회
   const team = await prisma.team.findFirst({
     where: {
@@ -70,3 +70,23 @@ export async function getMatchHistory(teamId) {
 
   return formattedMatches;
 }
+
+async function getTournamentMatchHistory(teamAId, teamBId, curTime) {
+  const t = curTime - 10 * 1000;
+  const history = await prisma.matchHistory.findFirst({
+    where: {
+      OR: [
+        { teamIdA: { in: teamAId }, teamIdB: { in: teamBId } },
+        { teamIdA: { in: teamBId }, teamIdB: { in: teamAId } },
+      ],
+      matchTime: {
+        gte: t,
+        lte: curTime,
+      },
+    },
+  });
+
+  return history;
+}
+
+export { getMatchHistory, getTournamentMatchHistory };
