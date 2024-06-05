@@ -8,6 +8,7 @@ import userRouter from './routes/user.router.js';
 import owningPlayerRouter from './routes/owning_player.router.js';
 import teamRouter from './routes/team.router.js';
 import matchHistoryRouter from './routes/match-history.router.js';
+import tournamentRouter from './routes/tournament.router.js';
 import tournamentEndRouter from './routes/tournament-end.router.js';
 
 dotEnv.config();
@@ -23,6 +24,7 @@ const routers = [
   teamRouter,
   rankingRouter,
   matchHistoryRouter,
+  tournamentRouter,
   tournamentEndRouter,
 ];
 
