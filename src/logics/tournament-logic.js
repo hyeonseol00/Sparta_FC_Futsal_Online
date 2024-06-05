@@ -1,22 +1,20 @@
 import { prisma } from '../utils/prisma/index.js';
 import { getTournamentMatchHistory } from '../logics/match-history.logic.js';
 
-async function resultMatch(tournamentId, roundName, teamId) {
+async function resultMatch(tournamentId, roundName, nextRoundName, teamId) {
   const splitRound = roundName.split('-');
-  let nextRoundPullName, nextRoundName, nextRoundNum, nextMatchLength;
+  let nextRoundPullName, nextRoundNum, nextMatchLength;
   if (roundName.includes('quater')) {
-    nextRoundName = 'semi';
     nextMatchLength = 2;
 
-    if (splitRound[1] === 1 || splitRound[1] === 2) {
+    if (+splitRound[1] === 1 || +splitRound[1] === 2) {
       nextRoundNum = 1;
-    } else if (splitRound[1] === 3 || splitRound[1] === 4) {
+    } else if (+splitRound[1] === 3 || +splitRound[1] === 4) {
       nextRoundNum = 2;
     }
 
     nextRoundPullName = nextRoundName + '-' + nextRoundNum;
   } else if (roundName.includes('semi')) {
-    nextRoundName = 'final';
     nextRoundPullName = 'final';
     nextMatchLength = 1;
   }
@@ -75,7 +73,7 @@ async function resultMatch(tournamentId, roundName, teamId) {
     const nextMatchList = await prisma.tournamentMatch.findMany({
       where: {
         tournamentId,
-        roundName: nextRoundPullName,
+        roundName: { contains: nextRoundName },
         AND: [
           {
             teamAId: {
@@ -117,4 +115,4 @@ async function loopFind(teamAId, teamBId, curTime) {
   }, 3000);
 }
 
-export { resultMatch , loopFind };
+export { resultMatch, loopFind };

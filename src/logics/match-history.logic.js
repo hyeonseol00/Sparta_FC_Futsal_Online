@@ -4,7 +4,7 @@ import { prisma } from '../utils/prisma/index.js';
 async function getMatchHistory(userId) {
   // 유효한 userId 인지 확인
   const user = await prisma.user.findUnique({
-    where: { userId: userId }, 
+    where: { userId: userId },
   });
 
   if (!user) {
@@ -68,7 +68,7 @@ async function getMatchHistory(userId) {
         teamBScore: teamBScore?.score || 0,
         matchTime: match.matchTime,
       };
-    })
+    }),
   );
 
   return formattedMatches;
