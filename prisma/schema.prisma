@@ -75,7 +75,6 @@ model team {
   @@index([keeperId], map: "team_keeper_id_fkey")
   @@index([strikerId], map: "team_striker_id_fkey")
   @@index([userId], map: "team_user_id_fkey")
-
   @@map("team")
 }
 
@@ -148,10 +147,10 @@ model tournamentMatch {
   tournamentMatchId                    Int        @id @default(autoincrement()) @map("tournament_match_id")
   tournamentId                         Int        @map("tournament_id")
   roundName                            String     @default("quater") @map("roundName")
-  teamAId                              Int        @map("teamA_id")
-  teamBId                              Int        @map("teamB_id")
-  team_tournament_match_teamA_idToteam team       @relation("tournament_match_teamA_idToteam", fields: [teamAId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "team_a_match_id_fkey")
-  team_tournament_match_teamB_idToteam team       @relation("tournament_match_teamB_idToteam", fields: [teamBId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "team_b_match_id_fkey")
+  teamAId                              Int?       @map("teamA_id")
+  teamBId                              Int?       @map("teamB_id")
+  team_tournament_match_teamA_idToteam team?      @relation("tournament_match_teamA_idToteam", fields: [teamAId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "team_a_match_id_fkey")
+  team_tournament_match_teamB_idToteam team?      @relation("tournament_match_teamB_idToteam", fields: [teamBId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "team_b_match_id_fkey")
   tournament                           tournament @relation(fields: [tournamentId], references: [tournamentId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_id_fkey")
 
   @@index([teamAId], map: "team_a_match_id_fkey")
