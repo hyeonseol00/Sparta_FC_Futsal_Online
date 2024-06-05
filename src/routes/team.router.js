@@ -35,7 +35,7 @@ router.get('/team/:teamId', async (req, res, next) => {
       });
 
       content.push(
-        `역활 : ${pos[i]} / 이름: ${findName.playerName} / 등급 : ${findPlayer.grade}`,
+        `역할 : ${pos[i]} / 이름: ${findName.playerName} / 등급 : ${findPlayer.grade}`,
       );
     }
 
@@ -339,5 +339,21 @@ async function RemoveSamePlayerId(arr1, arr2) {
   }
   return [arr1, arr2];
 }
+
+// 팀 목록 조회 API
+router.get('/team/list/:userId', authMiddleware, async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const ownPlayerList = await prisma.team.findMany({
+      where: {
+        userId,
+      },
+    });
+
+    return res.status(200).json(ownPlayerList);
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default router;
