@@ -109,7 +109,7 @@ router.get('/tournament', async(req,res,next)=>{
 router.post('/tournament/:tournamentId/register', authMiddleware, async (req, res, next) => {
   try {
     const { tournamentId } = req.params;
-    const { teamId, ready = 0 } = req.body; // 요청 본문에서 ready 값을 받아오고 기본값을 0으로 설정
+    const { teamId, ready = 0 } = req.body; 
 
     // 토너먼트 및 팀 확인
     const tournament = await prisma.tournament.findUnique({ where: { tournamentId: +tournamentId } });
