@@ -1,5 +1,7 @@
 import { prisma } from '../utils/prisma/index.js';
 import { Prisma } from '@prisma/client';
+import { handleLose, handleWin } from './score.logic.js';
+import { getRankings } from './ranking.logic.js';
 
 const weight = {
   speed: 0.1,
@@ -69,19 +71,16 @@ async function playGame(userATeamId, userBTeamId) {
     userATeam.striker.shootPower * weight.shootPower +
     userATeam.striker.defence * weight.defence +
     userATeam.striker.stamina * weight.stamina +
-    userATeamOwningPlayer.striker.grade +
     userATeam.defender.speed * weight.speed +
     userATeam.defender.goalDecision * weight.goalDecision +
     userATeam.defender.shootPower * weight.shootPower +
     userATeam.defender.defence * weight.defence +
     userATeam.defender.stamina * weight.stamina +
-    userATeamOwningPlayer.defender.grade +
     userATeam.keeper.speed * weight.speed +
     userATeam.keeper.goalDecision * weight.goalDecision +
     userATeam.keeper.shootPower * weight.shootPower +
     userATeam.keeper.defence * weight.defence +
-    userATeam.keeper.stamina * weight.stamina +
-    userATeamOwningPlayer.keeper.grade;
+    userATeam.keeper.stamina * weight.stamina;
 
   const userBTeamPower =
     userBTeam.striker.speed * weight.speed +
@@ -89,19 +88,16 @@ async function playGame(userATeamId, userBTeamId) {
     userBTeam.striker.shootPower * weight.shootPower +
     userBTeam.striker.defence * weight.defence +
     userBTeam.striker.stamina * weight.stamina +
-    userBTeamOwningPlayer.striker.grade +
     userBTeam.defender.speed * weight.speed +
     userBTeam.defender.goalDecision * weight.goalDecision +
     userBTeam.defender.shootPower * weight.shootPower +
     userBTeam.defender.defence * weight.defence +
     userBTeam.defender.stamina * weight.stamina +
-    userBTeamOwningPlayer.defender.grade +
     userBTeam.keeper.speed * weight.speed +
     userBTeam.keeper.goalDecision * weight.goalDecision +
     userBTeam.keeper.shootPower * weight.shootPower +
     userBTeam.keeper.defence * weight.defence +
-    userBTeam.keeper.stamina * weight.stamina +
-    userBTeamOwningPlayer.keeper.grade;
+    userBTeam.keeper.stamina * weight.stamina;
 
   // 룰렛
   const scoreSum = userATeamPower + userBTeamPower;
@@ -123,113 +119,11 @@ async function playGame(userATeamId, userBTeamId) {
 
   const randomValue = Math.random() * scoreSum;
   if (randomValue < userATeamPower) {
-    await prisma.$transaction(
-      async (tx) => {
-        if (userARecord) {
-          await tx.record.update({
-            data: {
-              score: +userARecord.score + aScore,
-              win: +userARecord.win + 1,
-            },
-            where: {
-              userId: userATeamList.userId,
-            },
-          });
-        } else {
-          await tx.record.create({
-            data: {
-              userId: userATeamList.userId,
-              score: aScore,
-              win: 1,
-              lose: 0,
-              draw: 0,
-              rank: 1000,
-            },
-          });
-        }
-
-        if (userBRecord) {
-          await tx.record.update({
-            data: {
-              score: +userBRecord.score + bScore,
-              win: +userBRecord.lose + 1,
-            },
-            where: {
-              userId: userBTeamList.userId,
-            },
-          });
-        } else {
-          await tx.record.create({
-            data: {
-              userId: userBTeamList.userId,
-              score: bScore,
-              win: 0,
-              lose: 1,
-              draw: 0,
-              rank: 1000,
-            },
-          });
-        }
-      },
-      {
-        isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
-      },
-    );
+    await handleWin(userA.userId, userB.userId, userATeamId, userBTeamId, aScore, bScore);
 
     return `${userA.userName} 승리: ${userA.userName} ${aScore} - ${bScore} ${userB.userName}`;
   } else {
-    await prisma.$transaction(
-      async (tx) => {
-        if (userBRecord) {
-          await tx.record.update({
-            data: {
-              score: +userBRecord.score + aScore,
-              win: +userBRecord.win + 1,
-            },
-            where: {
-              userId: userBTeamList.userId,
-            },
-          });
-        } else {
-          await tx.record.create({
-            data: {
-              userId: userBTeamList.userId,
-              score: aScore,
-              win: 1,
-              lose: 0,
-              draw: 0,
-              rank: 1000,
-            },
-          });
-        }
-
-        if (userARecord) {
-          await tx.record.update({
-            data: {
-              score: +userARecord.score + bScore,
-              win: +userARecord.lose + 1,
-            },
-            where: {
-              userId: userATeamList.userId,
-            },
-          });
-        } else {
-          await tx.record.create({
-            data: {
-              userId: userATeamList.userId,
-              score: bScore,
-              win: 0,
-              lose: 1,
-              draw: 0,
-              rank: 1000,
-            },
-          });
-        }
-      },
-      {
-        isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
-      },
-    );
+    await handleWin(userB.userId, userA.userId, userBTeamId, userATeamId, aScore, bScore);
 
     return `${userB.userName} 승리: ${userB.userName} ${aScore} - ${bScore} ${userA.userName}`;
   }
