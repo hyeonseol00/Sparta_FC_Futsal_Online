@@ -1,5 +1,4 @@
 import { prisma } from '../utils/prisma/index.js';
-import { getTournamentMatchHistory } from '../logics/match-history.logic.js';
 
 async function resultMatch(tournamentId, roundName, nextRoundName, teamId) {
   const splitRound = roundName.split('-');
@@ -19,7 +18,7 @@ async function resultMatch(tournamentId, roundName, nextRoundName, teamId) {
     nextMatchLength = 1;
   }
 
-  if (roundName == 'final') {
+  if (roundName === 'final') {
     // 결승일 때 우승자 처리
     await prisma.tournament.update({
       data: {
@@ -106,13 +105,39 @@ async function resultMatch(tournamentId, roundName, nextRoundName, teamId) {
 
 async function loopFind(teamAId, teamBId, curTime) {
   setTimeout(async () => {
-    const matchHistory = getTournamentMatchHistory(teamAId, teamBId, curTime);
-    if (!matchHistory) {
-      await loopFind(teamAId, teamBId, curTime);
+    const t = curTime - 30 * 1000;
+    const history = await prisma.matchHistory.findFirst({
+      where: {
+        OR: [
+          { teamIdA: { in: teamAId }, teamIdB: { in: teamBId } },
+          { teamIdA: { in: teamBId }, teamIdB: { in: teamAId } },
+        ],
+        matchTime: {
+          gte: t,
+          lte: curTime,
+        },
+      },
+    });
+
+    let message;
+    if (history.resultA === 'win') {
+      message = await resultMatch(
+        tournamentId,
+        match.roundName,
+        nextRoundName,
+        history.teamIdA,
+      );
     } else {
-      return matchHistory;
+      message = await resultMatch(
+        tournamentId,
+        match.roundName,
+        nextRoundName,
+        history.teamIdB,
+      );
     }
-  }, 3000);
+
+    return message;
+  }, 10000);
 }
 
 export { resultMatch, loopFind };

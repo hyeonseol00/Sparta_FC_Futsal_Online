@@ -151,38 +151,31 @@ router.post(
           if (match.teamAId === +teamId) {
             // team A 인 유저 요청일 때는 playGame() -> match history() 결과 받기
             const playResult = await playGame(match.teamAId, match.teamBId);
+
             const splitResult = playResult.split('승리');
-            const winner = splitResult
-              .map((element) => element.trim())
-              .join('');
+            const winnerName = splitResult[0].trim();
+            const winnerUser = await prisma.user.findFirst({
+              where: {
+                userName: winnerName,
+              },
+            });
+
+            let winnerId;
+            if (userTeam.userId === winnerUser.userId) {
+              winnerId = userTeam.teamId;
+            } else {
+              winnerId = otherTeamId;
+            }
+
             message = await resultMatch(
               tournamentId,
               match.roundName,
               nextRoundName,
-              winner,
+              winnerId,
             );
           } else {
             // team B 인 유저 요청일 때는 findFirst() -> 딜레이 -> 못찾으면 다시 findFirst() 찾으면 match history() 결과 받기
-            const matchHistory = await loopFind(
-              +teamId,
-              otherTeamId,
-              new Date(),
-            );
-            if (matchHistory.resultA === 'win') {
-              message = await resultMatch(
-                tournamentId,
-                match.roundName,
-                nextRoundName,
-                matchHistory.teamAId,
-              );
-            } else {
-              message = await resultMatch(
-                tournamentId,
-                match.roundName,
-                nextRoundName,
-                matchHistory.teamBId,
-              );
-            }
+            message = await loopFind(+teamId, otherTeamId, new Date());
           }
         } else {
           // 상대 팀 ready가 안되었을 때는 부전승처리
