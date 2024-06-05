@@ -105,12 +105,18 @@ async function resultMatch(tournamentId, roundName, nextRoundName, teamId) {
 
 async function loopFind(teamAId, teamBId, curTime) {
   setTimeout(async () => {
-    const t = curTime - 30 * 1000;
+    const t = new Deta(curTime - 30 * 1000);
     const history = await prisma.matchHistory.findFirst({
       where: {
         OR: [
-          { teamIdA: { in: teamAId }, teamIdB: { in: teamBId } },
-          { teamIdA: { in: teamBId }, teamIdB: { in: teamAId } },
+          {
+            teamIdA: teamAId,
+            teamIdB: teamBId,
+          },
+          {
+            teamIdA: teamBId,
+            teamIdB: teamAId,
+          },
         ],
         matchTime: {
           gte: t,
