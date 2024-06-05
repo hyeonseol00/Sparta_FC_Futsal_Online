@@ -47,7 +47,7 @@ router.post(
       const entry = await prisma.tournamentEntry.findFirst({
         where: {
           tournamentId,
-          teamId,
+          teamId: +teamId,
         },
       });
       if (!entry) {
@@ -63,10 +63,10 @@ router.post(
           },
           OR: [
             {
-              teamAId: teamId,
+              teamAId: +teamId,
             },
             {
-              teamBId: teamId,
+              teamBId: +teamId,
             },
           ],
         },
@@ -83,12 +83,12 @@ router.post(
         },
         where: {
           tournamentId,
-          teamId,
+          teamId: +teamId,
         },
       });
 
       let otherTeamId;
-      if (match.teamAId === teamId) {
+      if (match.teamAId === +teamId) {
         otherTeamId = match.teamBId;
       } else {
         otherTeamId = match.teamAId;
@@ -106,15 +106,15 @@ router.post(
 
         if (otherTeam.ready) {
           // 상대 팀 ready가 되었을 때 그대로 게임 진행
-          if (match.teamAId === teamId) {
+          if (match.teamAId === +teamId) {
             // team A 인 유저 요청일 때는 playGame() -> match history() 결과 받기
-            const playResult = await playGame(userATeamId, userBTeam.teamId);
+            const playResult = await playGame(match.teamAId, match.teamBId);
             const splitResult = playResult.split('승리');
             splitResult = splitResult.map((element) => element.trim()).join('');
             message = resultMatch(tournamentId, roundName, splitResult[0]);
           } else {
             // team B 인 유저 요청일 때는 findFirst() -> 딜레이 -> 못찾으면 다시 findFirst() 찾으면 match history() 결과 받기
-            const matchHistory = loopFind(teamId, otherTeamId, new Date());
+            const matchHistory = loopFind(+teamId, otherTeamId, new Date());
             if (matchHistory.resultA.equals('win')) {
               message = resultMatch(
                 tournamentId,
@@ -131,7 +131,7 @@ router.post(
           }
         } else {
           // 상대 팀 ready가 안되었을 때는 부전승처리
-          message = resultMatch(tournamentId, roundName, teamId);
+          message = resultMatch(tournamentId, roundName, +teamId);
         }
 
         // 해당 매치가 종료가 됐으니 ready는 다시 false로
@@ -141,7 +141,7 @@ router.post(
           },
           where: {
             tournamentId,
-            teamId,
+            teamId: +teamId,
           },
         });
 
