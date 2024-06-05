@@ -9,6 +9,7 @@ import owningPlayerRouter from './routes/owning_player.router.js';
 import teamRouter from './routes/team.router.js';
 import matchHistoryRouter from './routes/match-history.router.js';
 import tournamentEndRouter from './routes/tournament-end.router.js';
+import playerRouter from './routes/player.router.js';
 
 dotEnv.config();
 
@@ -24,6 +25,7 @@ const routers = [
   rankingRouter,
   matchHistoryRouter,
   tournamentEndRouter,
+  playerRouter,
 ];
 
 app.use('/api', routers);
