@@ -7,153 +7,145 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model user {
-  userId        String         @id @map("user_id")
-  userName      String         @unique @map("user_name")
-  userPw        String         @map("user_pw")
-  cash          Int            @default(10000) @map("cash")
-  matchHistoryA matchHistory[] @relation("userMatches")
-  matchHistoryB matchHistory[] @relation("opponentMatches")
-  owningPlayer  owningPlayer[]
-  record        record?
-  team          team[]
+model match_history {
+  match_id                           Int      @id @default(autoincrement())
+  user_id_a                          String
+  user_id_b                          String
+  team_id_a                          Int
+  team_id_b                          Int
+  result_a                           String
+  result_b                           String
+  score_change_a                     Int
+  score_change_b                     Int
+  match_time                         DateTime @default(now())
+  team_a_score                       Int
+  team_b_score                       Int
+  team_match_history_team_id_aToteam team     @relation("match_history_team_id_aToteam", fields: [team_id_a], references: [team_id])
+  team_match_history_team_id_bToteam team     @relation("match_history_team_id_bToteam", fields: [team_id_b], references: [team_id])
+  user_match_history_user_id_aTouser user     @relation("match_history_user_id_aTouser", fields: [user_id_a], references: [user_id])
+  user_match_history_user_id_bTouser user     @relation("match_history_user_id_bTouser", fields: [user_id_b], references: [user_id])
 
-  @@map("user")
+  @@index([team_id_a], map: "match_history_team_id_a_fkey")
+  @@index([team_id_b], map: "match_history_team_id_b_fkey")
+  @@index([user_id_a], map: "match_history_user_id_a_fkey")
+  @@index([user_id_b], map: "match_history_user_id_b_fkey")
+}
+
+model owning_player {
+  owning_player_id                     Int    @id @default(autoincrement())
+  user_id                              String
+  player_id                            Int
+  grade                                Int
+  count                                Int    @default(1)
+  player                               player @relation(fields: [player_id, grade], references: [player_id, grade], onDelete: Cascade)
+  user                                 user   @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  team_team_defender_idToowning_player team[] @relation("team_defender_idToowning_player")
+  team_team_keeper_idToowning_player   team[] @relation("team_keeper_idToowning_player")
+  team_team_striker_idToowning_player  team[] @relation("team_striker_idToowning_player")
+
+  @@index([player_id, grade], map: "owning_player_player_id_grade_fkey")
+  @@index([user_id], map: "owning_player_user_id_fkey")
 }
 
 model player {
-  playerId     Int            @unique @default(autoincrement()) @map("player_id")
-  playerName   String         @map("player_name")
-  speed        Int            @map("speed")
-  goalDecision Int            @map("goal_decision")
-  shootPower   Int            @map("shoot_power")
-  defence      Int            @map("defence")
-  stamina      Int            @map("stamina")
-  grade        Int            @default(1) @map("grade")
-  owningPlayer owningPlayer[]
-  tournament   tournament[]
+  player_id     Int             @unique @default(autoincrement())
+  player_name   String
+  speed         Int
+  goal_decision Int
+  shoot_power   Int
+  defence       Int
+  stamina       Int
+  grade         Int             @default(1)
+  owning_player owning_player[]
+  tournament    tournament[]
 
-  @@id([playerId, grade])
-  @@map("player")
-}
-
-model owningPlayer {
-  owningPlayerId Int    @id @default(autoincrement()) @map("owning_player_id")
-  userId         String @map("user_id")
-  playerId       Int    @map("player_id")
-  grade          Int    @map("grade")
-  count          Int    @default(1) @map("count")
-  player         player @relation(fields: [playerId, grade], references: [playerId, grade], onDelete: Cascade)
-  user           user   @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  defender       team[] @relation("DefenderRelation")
-  keeper         team[] @relation("KeeperRelation")
-  striker        team[] @relation("StrikerRelation")
-
-  @@index([playerId, grade], map: "owning_player_player_id_grade_fkey")
-  @@index([userId], map: "owning_player_user_id_fkey")
-  @@map("owning_player")
-}
-
-model team {
-  teamId                                                         Int                @id @default(autoincrement()) @map("team_id")
-  userId                                                         String             @map("user_id")
-  defenderId                                                     Int                @map("defender_id")
-  strikerId                                                      Int                @map("striker_id")
-  keeperId                                                       Int                @map("keeper_id")
-  matchHistoryAsA                                                matchHistory[]     @relation("teamAMatches")
-  matchHistoryAsB                                                matchHistory[]     @relation("teamBMatches")
-  defender                                                       owningPlayer       @relation("DefenderRelation", fields: [defenderId], references: [owningPlayerId], onDelete: Cascade)
-  keeper                                                         owningPlayer       @relation("KeeperRelation", fields: [keeperId], references: [owningPlayerId], onDelete: Cascade)
-  striker                                                        owningPlayer       @relation("StrikerRelation", fields: [strikerId], references: [owningPlayerId], onDelete: Cascade)
-  user                                                           user               @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  tournament                                                     tournament[]
-  tournamentEntry                                                tournamentEntry[]
-  team_entry_a        tournamentMatch[] @relation("match_team_a")
-  team_entry_b        tournamentMatch[] @relation("match_team_b")
-
-  @@index([defenderId], map: "team_defender_id_fkey")
-  @@index([keeperId], map: "team_keeper_id_fkey")
-  @@index([strikerId], map: "team_striker_id_fkey")
-  @@index([userId], map: "team_user_id_fkey")
-
-  @@map("team")
+  @@id([player_id, grade])
 }
 
 model record {
-  userId String @id @map("user_id")
-  score  Int    @default(1000) @map("score")
-  win    Int    @default(0) @map("win")
-  lose   Int    @default(0) @map("lose")
-  draw   Int    @default(0) @map("draw")
-  rank   Int    @map("rank")
-  user   user   @relation(fields: [userId], references: [userId], onDelete: Cascade)
-
-  @@map("record")
+  user_id String @id
+  score   Int    @default(1000)
+  win     Int    @default(0)
+  lose    Int    @default(0)
+  draw    Int    @default(0)
+  rank    Int
+  user    user   @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 }
 
-model matchHistory {
-  matchId      Int      @id @default(autoincrement()) @map("match_id")
-  userIdA      String   @map("user_id_a")
-  userIdB      String   @map("user_id_b")
-  teamIdA      Int      @map("team_id_a")
-  teamIdB      Int      @map("team_id_b")
-  resultA      String   @map("result_a")
-  resultB      String   @map("result_b")
-  scoreChangeA Int      @map("score_change_a")
-  scoreChangeB Int      @map("score_change_b")
-  matchTime    DateTime @default(now()) @map("match_time")
-  teamAScore   Int      @map("team_a_score")
-  teamBScore   Int      @map("team_b_score")
-  teamA        team     @relation("teamAMatches", fields: [teamIdA], references: [teamId])
-  teamB        team     @relation("teamBMatches", fields: [teamIdB], references: [teamId])
-  userA        user     @relation("userMatches", fields: [userIdA], references: [userId])
-  userB        user     @relation("opponentMatches", fields: [userIdB], references: [userId])
+model team {
+  team_id                                          Int                @id @default(autoincrement())
+  user_id                                          String
+  defender_id                                      Int
+  striker_id                                       Int
+  keeper_id                                        Int
+  match_history_match_history_team_id_aToteam      match_history[]    @relation("match_history_team_id_aToteam")
+  match_history_match_history_team_id_bToteam      match_history[]    @relation("match_history_team_id_bToteam")
+  owning_player_team_defender_idToowning_player    owning_player      @relation("team_defender_idToowning_player", fields: [defender_id], references: [owning_player_id], onDelete: Cascade)
+  owning_player_team_keeper_idToowning_player      owning_player      @relation("team_keeper_idToowning_player", fields: [keeper_id], references: [owning_player_id], onDelete: Cascade)
+  owning_player_team_striker_idToowning_player     owning_player      @relation("team_striker_idToowning_player", fields: [striker_id], references: [owning_player_id], onDelete: Cascade)
+  user                                             user               @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  tournament                                       tournament[]
+  tournament_entry                                 tournament_entry[]
+  tournament_match_tournament_match_teamA_idToteam tournament_match[] @relation("tournament_match_teamA_idToteam")
+  tournament_match_tournament_match_teamB_idToteam tournament_match[] @relation("tournament_match_teamB_idToteam")
 
-  @@index([teamIdA], map: "match_history_team_id_a_fkey")
-  @@index([teamIdB], map: "match_history_team_id_b_fkey")
-  @@index([userIdA], map: "match_history_user_id_a_fkey")
-  @@index([userIdB], map: "match_history_user_id_b_fkey")
-  @@map("match_history")
+  @@index([defender_id], map: "team_defender_id_fkey")
+  @@index([keeper_id], map: "team_keeper_id_fkey")
+  @@index([striker_id], map: "team_striker_id_fkey")
+  @@index([user_id], map: "team_user_id_fkey")
 }
 
 model tournament {
-  tournamentId        Int               @id @unique(map: "tournament_id_UNIQUE") @default(autoincrement()) @map("tournament_id")
-  scheduledTime       DateTime          @db.DateTime(0) @map("scheduled_time")
-  currentRound        String            @default("quater")      @map("current_round")
-  winnerTeamId	      Int?				      @map("winner_team_id")
-  rewardPlayerId      Int				        @map("reward_player_id")
-  rewardPlayerGrade	  Int				        @map("reward_player_grade")
-  player              player            @relation(fields: [rewardPlayerId, rewardPlayerGrade], references: [playerId, grade], onDelete: NoAction, onUpdate: NoAction, map: "reward_player_id_fkey")
-  team                team?             @relation(fields: [winnerTeamId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "winner_team_id_fkey")
-  tournament_entry    tournamentEntry[]
-  tournament_match    tournamentMatch[]
+  tournament_id       Int                @id @unique(map: "tournament_id_UNIQUE") @default(autoincrement())
+  scheduled_time      DateTime           @db.DateTime(0)
+  winner_team_id      Int?
+  reward_player_id    Int
+  reward_player_grade Int
+  current_round       String             @default("quater")
+  player              player             @relation(fields: [reward_player_id, reward_player_grade], references: [player_id, grade], onDelete: NoAction, onUpdate: NoAction, map: "reward_player_id_fkey")
+  team                team?              @relation(fields: [winner_team_id], references: [team_id], onDelete: NoAction, onUpdate: NoAction, map: "winner_team_id_fkey")
+  tournament_entry    tournament_entry[]
+  tournament_match    tournament_match[]
 
-  @@index([rewardPlayerId, rewardPlayerGrade], map: "reward_player_id_fkey_idx")
-  @@index([winnerTeamId], map: "winner_team_id_fkey_idx")
+  @@index([reward_player_id, reward_player_grade], map: "reward_player_id_fkey_idx")
+  @@index([winner_team_id], map: "winner_team_id_fkey_idx")
 }
 
-model tournamentEntry {
-  tournamentEntryId   Int        @id @default(autoincrement())    @map("tournament_entry_id")
-  tournamentId        Int                                         @map("tournament_id")
-  teamId              Int		                                      @map("team_id")
-  ready               Int        @db.TinyInt    @default(0)       @map("ready")
+model tournament_entry {
+  tournament_entry_id Int        @id @default(autoincrement())
+  tournament_id       Int
+  team_id             Int
+  ready               Int        @default(0) @db.TinyInt
+  team                team       @relation(fields: [team_id], references: [team_id], onDelete: NoAction, onUpdate: NoAction, map: "entry_team_id_fkey")
+  tournament          tournament @relation(fields: [tournament_id], references: [tournament_id], onDelete: NoAction, onUpdate: NoAction, map: "tournament_entry_id_fkey")
 
-  tournament    tournament      @relation(fields: [tournamentId], references: [tournamentId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_entry_id_fkey")
-  team          team            @relation(fields: [teamId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "entry_team_id_fkey")
-
-  @@map("tournament_entry")
+  @@index([team_id], map: "entry_team_id_fkey")
+  @@index([tournament_id], map: "tournament_entry_id_fkey")
 }
 
-model tournamentMatch {
-  tournamentMatchId   Int     @id   @default(autoincrement())   @map("tournament_match_id")
-  tournamentId        Int                                       @map("tournament_id")
-  roundName           String        @default("quater")          @map("roundName")
-  teamAId             Int?                                       @map("teamA_id")
-  teamBId             Int?                                       @map("teamB_id")
+model tournament_match {
+  tournament_match_id                  Int        @id @default(autoincrement())
+  tournament_id                        Int
+  roundName                            String     @default("quater")
+  teamA_id                             Int?
+  teamB_id                             Int?
+  team_tournament_match_teamA_idToteam team?      @relation("tournament_match_teamA_idToteam", fields: [teamA_id], references: [team_id], onDelete: NoAction, onUpdate: NoAction, map: "team_a_match_id_fkey")
+  team_tournament_match_teamB_idToteam team?      @relation("tournament_match_teamB_idToteam", fields: [teamB_id], references: [team_id], onDelete: NoAction, onUpdate: NoAction, map: "team_b_match_id_fkey")
+  tournament                           tournament @relation(fields: [tournament_id], references: [tournament_id], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_id_fkey")
 
-  tournament    tournament      @relation(fields: [tournamentId], references: [tournamentId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_id_fkey")
-  team_a        team?           @relation("match_team_a", fields: [teamAId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "team_a_match_id_fkey")
-  team_b        team?           @relation("match_team_b", fields: [teamBId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "team_b_match_id_fkey")
+  @@index([teamA_id], map: "team_a_match_id_fkey")
+  @@index([teamB_id], map: "team_b_match_id_fkey")
+  @@index([tournament_id], map: "tournament_match_id_fkey")
+}
 
-  @@map("tournament_match")
+model user {
+  user_id                                     String          @id
+  user_name                                   String          @unique
+  user_pw                                     String
+  cash                                        Int             @default(10000)
+  match_history_match_history_user_id_aTouser match_history[] @relation("match_history_user_id_aTouser")
+  match_history_match_history_user_id_bTouser match_history[] @relation("match_history_user_id_bTouser")
+  owning_player                               owning_player[]
+  record                                      record?
+  team                                        team[]
 }
