@@ -60,6 +60,10 @@ router.patch('/team/:teamId', authMiddleware, async (req, res, next) => {
       return res
         .status(403)
         .json({ message: '한 선수가 두개의 항목을 차지할 수 없습니다.' });
+    } else if (check == 'error_2') {
+      return res
+        .status(403)
+        .json({ message: '현재 보관함에 해당 선수가 존재하지 않습니다.' });
     }
 
     const { isExistDefender, isExistStriker, isExistKeeper } = check;
@@ -158,7 +162,12 @@ router.post('/team', authMiddleware, async (req, res, next) => {
       return res
         .status(400)
         .json({ message: '한 선수가 두개의 항목을 차지할 수 없습니다.' });
+    } else if (check == 'error_2') {
+      return res
+        .status(403)
+        .json({ message: '현재 보관함에 해당 선수가 존재하지 않습니다.' });
     }
+
     await prisma.$transaction(async (tx) => {
       const newTeam = await tx.team.create({
         data: {
@@ -279,6 +288,14 @@ async function Check(userId, defenderId, strikerId, keeperId) {
     isExistKeeper.owningPlayerId == isExistDefender.owningPlayerId
   )
     return 'error_1';
+
+  if (
+    isExistDefender.count < 1 ||
+    isExistStriker.count < 1 ||
+    isExistKeeper.count < 1
+  ) {
+    return 'error_2';
+  }
 
   return { isExistDefender, isExistStriker, isExistKeeper };
 }
