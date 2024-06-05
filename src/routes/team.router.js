@@ -35,7 +35,7 @@ router.get('/team/:teamId', async (req, res, next) => {
       });
 
       content.push(
-        `역활 : ${pos[i]} / 이름: ${findName.playerName} / 등급 : ${findPlayer.grade}`,
+        `역할 : ${pos[i]} / 이름: ${findName.playerName} / 등급 : ${findPlayer.grade}`,
       );
     }
 
@@ -60,6 +60,10 @@ router.patch('/team/:teamId', authMiddleware, async (req, res, next) => {
       return res
         .status(403)
         .json({ message: '한 선수가 두개의 항목을 차지할 수 없습니다.' });
+    } else if (check == 'error_2') {
+      return res
+        .status(403)
+        .json({ message: '현재 보관함에 해당 선수가 존재하지 않습니다.' });
     }
 
     const { isExistDefender, isExistStriker, isExistKeeper } = check;
@@ -158,7 +162,12 @@ router.post('/team', authMiddleware, async (req, res, next) => {
       return res
         .status(400)
         .json({ message: '한 선수가 두개의 항목을 차지할 수 없습니다.' });
+    } else if (check == 'error_2') {
+      return res
+        .status(403)
+        .json({ message: '현재 보관함에 해당 선수가 존재하지 않습니다.' });
     }
+
     await prisma.$transaction(async (tx) => {
       const newTeam = await tx.team.create({
         data: {
@@ -280,6 +289,14 @@ async function Check(userId, defenderId, strikerId, keeperId) {
   )
     return 'error_1';
 
+  if (
+    isExistDefender.count < 1 ||
+    isExistStriker.count < 1 ||
+    isExistKeeper.count < 1
+  ) {
+    return 'error_2';
+  }
+
   return { isExistDefender, isExistStriker, isExistKeeper };
 }
 
@@ -322,5 +339,21 @@ async function RemoveSamePlayerId(arr1, arr2) {
   }
   return [arr1, arr2];
 }
+
+// 팀 목록 조회 API
+router.get('/team/list/:userId', authMiddleware, async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const ownPlayerList = await prisma.team.findMany({
+      where: {
+        userId,
+      },
+    });
+
+    return res.status(200).json(ownPlayerList);
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default router;

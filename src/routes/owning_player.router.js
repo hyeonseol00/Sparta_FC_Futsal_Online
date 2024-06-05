@@ -1,6 +1,7 @@
 import express from 'express';
 import { prisma } from '../utils/prisma/index.js';
 import authMiddleware from '../middlewares/auth.middleware.js';
+import { Prisma } from '@prisma/client';
 
 const router = express.Router();
 
@@ -67,85 +68,90 @@ router.patch('/reinforce', authMiddleware, async (req, res, next) => {
     const successProbability = enhancementProbability[grade];
     const random = Math.random();
 
-    if (owningPlayer.count === 2) {
-      await prisma.owningPlayer.delete({
-        where: {
-          owningPlayerId: owningPlayer.owningPlayerId,
-        },
-      });
-    } else {
-      await prisma.owningPlayer.update({
-        data: {
-          count: owningPlayer.count - 2,
-        },
-        where: {
-          owningPlayerId: owningPlayer.owningPlayerId,
-        },
-      });
-    }
-
     let updateGrade;
     let result;
-
-    if (random < successProbability) {
-      // 강화 성공
-      updateGrade = owningPlayer.grade + 1;
-      result = '성공';
-    } else {
-      // 강화 실패
-      if (owningPlayer.grade < 4) {
-        updateGrade = 1;
-      } else if (owningPlayer.grade < 7) {
-        updateGrade = owningPlayer.grade - 3;
-      } else {
-        //7카 이상일 때 일정 확률로 0카
-        const failRandom = Math.random();
-        if (failRandom < explodedProbability) {
-          updateGrade = 0;
+    await prisma.$transaction(
+      async (tx) => {
+        if (owningPlayer.count === 2) {
+          await tx.owningPlayer.delete({
+            where: {
+              owningPlayerId: owningPlayer.owningPlayerId,
+            },
+          });
         } else {
-          updateGrade = owningPlayer.grade - 3;
+          await tx.owningPlayer.update({
+            data: {
+              count: owningPlayer.count - 2,
+            },
+            where: {
+              owningPlayerId: owningPlayer.owningPlayerId,
+            },
+          });
         }
-      }
 
-      result = '실패';
-    }
+        if (random < successProbability) {
+          // 강화 성공
+          updateGrade = owningPlayer.grade + 1;
+          result = '성공';
+        } else {
+          // 강화 실패
+          if (owningPlayer.grade < 4) {
+            updateGrade = 1;
+          } else if (owningPlayer.grade < 7) {
+            updateGrade = owningPlayer.grade - 3;
+          } else {
+            //7카 이상일 때 일정 확률로 0카
+            const failRandom = Math.random();
+            if (failRandom < explodedProbability) {
+              updateGrade = 0;
+            } else {
+              updateGrade = owningPlayer.grade - 3;
+            }
+          }
 
-    const gradePlayerInfo = await prisma.player.findFirst({
-      where: {
-        playerName,
-        grade: updateGrade,
+          result = '실패';
+        }
+
+        const gradePlayerInfo = await prisma.player.findFirst({
+          where: {
+            playerName,
+            grade: updateGrade,
+          },
+        });
+
+        const owningGradePlayer = await prisma.owningPlayer.findFirst({
+          where: {
+            userId,
+            playerId: gradePlayerInfo.playerId,
+            grade: gradePlayerInfo.grade,
+          },
+        });
+
+        if (owningGradePlayer) {
+          // 이미 +1 카드가 보유 선수에 존재 한다면
+          await tx.owningPlayer.update({
+            data: {
+              count: owningGradePlayer.count + 1,
+            },
+            where: {
+              owningPlayerId: owningGradePlayer.owningPlayerId,
+            },
+          });
+        } else {
+          // +1 카드가 보유 선수에 없다면
+          await tx.owningPlayer.create({
+            data: {
+              userId,
+              playerId: gradePlayerInfo.playerId,
+              grade: gradePlayerInfo.grade,
+            },
+          });
+        }
       },
-    });
-
-    const owningGradePlayer = await prisma.owningPlayer.findFirst({
-      where: {
-        userId,
-        playerId: gradePlayerInfo.playerId,
-        grade: gradePlayerInfo.grade,
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
       },
-    });
-
-    if (owningGradePlayer) {
-      // 이미 +1 카드가 보유 선수에 존재 한다면
-      await prisma.owningPlayer.update({
-        data: {
-          count: owningGradePlayer.count + 1,
-        },
-        where: {
-          owningPlayerId: owningGradePlayer.playerId,
-        },
-      });
-    } else {
-      // +1 카드가 보유 선수에 없다면
-      await prisma.owningPlayer.create({
-        data: {
-          userId,
-          playerId: gradePlayerInfo.playerId,
-          grade: gradePlayerInfo.grade,
-        },
-      });
-    }
-
+    );
     return res.status(200).json({ message: '강화에 ' + result + '했습니다.' });
   } catch (error) {
     next(error);
