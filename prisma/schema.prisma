@@ -75,6 +75,7 @@ model team {
   @@index([keeperId], map: "team_keeper_id_fkey")
   @@index([strikerId], map: "team_striker_id_fkey")
   @@index([userId], map: "team_user_id_fkey")
+
   @@map("team")
 }
 
