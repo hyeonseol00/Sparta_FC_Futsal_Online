@@ -119,7 +119,7 @@ model matchHistory {
 model tournament {
   tournamentId        Int               @id @unique(map: "tournament_id_UNIQUE") @default(autoincrement()) @map("tournament_id")
   scheduledTime       DateTime          @db.DateTime(0) @map("scheduled_time")
-  currentRound        String            @default("quater")      @map("cuurent_round")
+  currentRound        String            @default("quater")      @map("current_round")
   winnerTeamId	      Int?				      @map("winner_team_id")
   rewardPlayerId      Int				        @map("reward_player_id")
   rewardPlayerGrade	  Int				        @map("reward_player_grade")
