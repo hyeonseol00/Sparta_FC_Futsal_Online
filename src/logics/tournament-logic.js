@@ -123,8 +123,6 @@ async function transactionFind(roundName, match) {
       },
     });
 
-    console.log(history);
-
     let message;
     if (roundName === 'final') {
       if (history.resultA === 'win') {
@@ -141,6 +139,8 @@ async function transactionFind(roundName, match) {
           'Team ' + history.teamIdB + ' 님이 다음 라운드에 진출하셨습니다.';
       }
     }
+
+    console.log(history, message);
 
     return message;
   }, 5000);

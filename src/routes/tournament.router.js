@@ -174,7 +174,7 @@ router.post(
               winnerId,
             );
           } else {
-            // team B 인 유저 요청일 때는 findFirst() -> 딜레이 -> 못찾으면 다시 findFirst() 찾으면 match history() 결과 받기
+            // team B 인 유저 요청일 때는 match_history를 findFirst()해서 경기 결과 받기
             message = await transactionFind(roundName, match);
           }
         } else {
