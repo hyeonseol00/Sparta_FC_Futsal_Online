@@ -15,13 +15,13 @@ router.post('/tournament/end', async (req, res, next) => {
     const tournamentSemiMatch = await prisma.tournamentMatch.findMany({
       where: {
         tournamentId,
-        roundName: 'semi',
+        roundName: { contains: 'semi' },
       },
     });
     const tournamentFinalMatch = await prisma.tournamentMatch.findFirst({
       where: {
         tournamentId,
-        roundName: 'final',
+        roundName: { contains: 'final' },
       },
     });
 
@@ -29,14 +29,18 @@ router.post('/tournament/end', async (req, res, next) => {
       return res
         .status(404)
         .json({ errorMessage: '토너먼트를 찾을 수 없습니다.' });
+    else if (tournament.currentRound == 'closed')
+      return res
+        .status(404)
+        .json({ errorMessage: '이미 종료된 토너먼트입니다!' });
     else if (tournament.currentRound != 'finish')
       return res
         .status(404)
         .json({ errorMessage: '토너먼트가 아직 진행중입니다!' });
-    else if (tournament.currentRound != 'closed')
+    else if (!tournamentId)
       return res
-        .status(404)
-        .json({ errorMessage: '이미 종료된 토너먼트입니다!' });
+        .status(400)
+        .json({ errorMessage: '토너먼트 ID를 입력해주세요!' });
 
     // 상품 수여
     const teamIds = [
