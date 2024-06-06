@@ -103,48 +103,4 @@ async function resultMatch(tournamentId, roundName, nextRoundName, teamId) {
   }
 }
 
-async function transactionFind(teamAId, teamBId) {
-  // Date 타입으로 찾는 부분에 무리가 있어서 안되는 거라면
-  // 그냥 Team B에 속해있는 선수는 새 API를 호출하는 식으로 진행하는게 나을듯
-  try {
-    setTimeout(async () => {
-      const history = await prisma.matchHistory.findFirst({
-        where: {
-          OR: [
-            {
-              teamIdA: teamAId,
-              teamIdB: teamBId,
-            },
-            {
-              teamIdA: teamBId,
-              teamIdB: teamAId,
-            },
-          ],
-        },
-      });
-
-      let message;
-      if (history.resultA === 'win') {
-        message = await resultMatch(
-          tournamentId,
-          match.roundName,
-          nextRoundName,
-          history.teamIdA,
-        );
-      } else {
-        message = await resultMatch(
-          tournamentId,
-          match.roundName,
-          nextRoundName,
-          history.teamIdB,
-        );
-      }
-
-      return message;
-    }, 20000);
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-export { resultMatch, transactionFind };
+export { resultMatch };
