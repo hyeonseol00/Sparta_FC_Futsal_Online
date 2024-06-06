@@ -205,4 +205,23 @@ router.post(
   },
 );
 
+// 토너먼트 상세 조회 API
+router.get('/tournament/:tournamentId', async (req, res, next) => {
+  try {
+    const { tournamentId } = req.params;
+    const tournament = await prisma.tournament.findFirst({
+      where: { tournamentId: +tournamentId },
+    });
+    const tournamentMatchList = await prisma.tournamentMatch.findMany({
+      where: {
+        tournamentId: +tournamentId,
+      },
+    });
+
+    return res.status(200).json([tournament, tournamentMatchList]);
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
