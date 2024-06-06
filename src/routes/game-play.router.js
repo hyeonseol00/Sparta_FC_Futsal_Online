@@ -181,7 +181,11 @@ router.post(
   async (req, res, next) => {
     try {
       const { tournamentId } = req.params;
-      const { teamId, ready = 0 } = req.body; //ready default 값으로 0
+      const { teamId } = req.body; //ready default 값으로 0
+      const { userId } = req.user;
+
+      if (!teamId)
+        return res.status(404).json({ errorMessage: '팀 ID를 입력해 주세요!' });
 
       // 토너먼트 및 팀 확인
       const tournament = await prisma.tournament.findUnique({
@@ -196,31 +200,36 @@ router.post(
       }
       if (!team) {
         return res.status(404).json({ errorMessage: '팀을 찾을 수 없습니다.' });
+      } else if (team.userId != userId) {
+        return res
+          .status(404)
+          .json({ errorMessage: '본인이 소유한 팀이 아닙니다!' });
       }
 
-    // 팀이 이미 토너먼트에 등록되어 있는지 확인
-    const existingEntry = await prisma.tournamentEntry.findFirst({
-      where: { teamId: +teamId, tournamentId: +tournamentId },
-    });
+      // 팀이 이미 토너먼트에 등록되어 있는지 확인
+      const existingEntry = await prisma.tournamentEntry.findFirst({
+        where: { teamId: +teamId, tournamentId: +tournamentId },
+      });
 
-    if (existingEntry) {
-      return res.status(400).json({ errorMessage: '팀이 이미 토너먼트에 등록되어 있습니다.' });
-    }
+      if (existingEntry) {
+        return res
+          .status(400)
+          .json({ errorMessage: '팀이 이미 토너먼트에 등록되어 있습니다.' });
+      }
 
-     // 토너먼트에 등록된 팀 수 확인
-     const teamCount = await prisma.tournamentEntry.count({
-      where: { tournamentId: +tournamentId },
-    });
-    if (teamCount >= 8) {
-      return res.status(400).json({ errorMessage: '팀이 다 찼습니다.' });
-    }
+      // 토너먼트에 등록된 팀 수 확인
+      const teamCount = await prisma.tournamentEntry.count({
+        where: { tournamentId: +tournamentId },
+      });
+      if (teamCount >= 8) {
+        return res.status(400).json({ errorMessage: '팀이 다 찼습니다.' });
+      }
 
       // 새로운 토너먼트 엔트리 생성
       const tournamentEntry = await prisma.tournamentEntry.create({
         data: {
           tournamentId: +tournamentId,
           teamId: +teamId,
-          ready: +ready,
         },
       });
 

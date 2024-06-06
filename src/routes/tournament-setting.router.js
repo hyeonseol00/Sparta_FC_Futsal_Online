@@ -28,8 +28,10 @@ router.post(
         }),
       );
 
-      if (tnmt.winnerTeamId)
-        return res.status(401).json({ message: '이미 끝난 토너먼트입니다!' });
+      if (tnmt.currentRound != 'start')
+        return res
+          .status(401)
+          .json({ message: '이미 편성 완료된 토너먼트입니다.' });
 
       /* if (Math.floor((new Date() - tnmt.scheduledTime) / 1000 / 60) < 60) {
         return res
@@ -63,8 +65,17 @@ router.post(
           });
         }
 
-        return res.status(201).json({ message: '대진표가 완성되었습니다!' });
+        await tx.tournament.update({
+          data: {
+            currentRound: 'quater',
+          },
+          where: {
+            tournamentId: +tournamentId,
+          },
+        });
       });
+
+      return res.status(201).json({ message: '대진표가 완성되었습니다!' });
     } catch (error) {
       next(error);
     }
