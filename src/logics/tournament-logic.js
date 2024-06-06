@@ -1,27 +1,24 @@
 import { prisma } from '../utils/prisma/index.js';
-import { getTournamentMatchHistory } from '../logics/match-history.logic.js';
 
-async function resultMatch(tournamentId, roundName, teamId) {
+async function resultMatch(tournamentId, roundName, nextRoundName, teamId) {
   const splitRound = roundName.split('-');
-  let nextRoundPullName, nextRoundName, nextRoundNum, nextMatchLength;
+  let nextRoundPullName, nextRoundNum, nextMatchLength;
   if (roundName.includes('quater')) {
-    nextRoundName = 'semi';
     nextMatchLength = 2;
 
-    if (splitRound[1] === 1 || splitRound[1] === 2) {
+    if (+splitRound[1] === 1 || +splitRound[1] === 2) {
       nextRoundNum = 1;
-    } else if (splitRound[1] === 3 || splitRound[1] === 4) {
+    } else if (+splitRound[1] === 3 || +splitRound[1] === 4) {
       nextRoundNum = 2;
     }
 
     nextRoundPullName = nextRoundName + '-' + nextRoundNum;
   } else if (roundName.includes('semi')) {
-    nextRoundName = 'final';
     nextRoundPullName = 'final';
     nextMatchLength = 1;
   }
 
-  if (roundName == 'final') {
+  if (roundName === 'final') {
     // 결승일 때 우승자 처리
     await prisma.tournament.update({
       data: {
@@ -75,7 +72,7 @@ async function resultMatch(tournamentId, roundName, teamId) {
     const nextMatchList = await prisma.tournamentMatch.findMany({
       where: {
         tournamentId,
-        roundName: nextRoundPullName,
+        roundName: { contains: nextRoundName },
         AND: [
           {
             teamAId: {
@@ -107,14 +104,52 @@ async function resultMatch(tournamentId, roundName, teamId) {
 }
 
 async function loopFind(teamAId, teamBId, curTime) {
-  setTimeout(async () => {
-    const matchHistory = getTournamentMatchHistory(teamAId, teamBId, curTime);
-    if (!matchHistory) {
-      await loopFind(teamAId, teamBId, curTime);
-    } else {
-      return matchHistory;
-    }
-  }, 3000);
+  // Date 타입으로 찾는 부분에 무리가 있어서 안되는 거라면
+  // 그냥 Team B에 속해있는 선수는 새 API를 호출하는 식으로 진행하는게 나을듯
+  try {
+    setTimeout(async () => {
+      const t = new Date(curTime - 30 * 1000);
+      const history = await prisma.matchHistory.findFirst({
+        where: {
+          OR: [
+            {
+              teamIdA: teamAId,
+              teamIdB: teamBId,
+            },
+            {
+              teamIdA: teamBId,
+              teamIdB: teamAId,
+            },
+          ],
+          matchTime: {
+            gte: t,
+            lte: curTime,
+          },
+        },
+      });
+
+      let message;
+      if (history.resultA === 'win') {
+        message = await resultMatch(
+          tournamentId,
+          match.roundName,
+          nextRoundName,
+          history.teamIdA,
+        );
+      } else {
+        message = await resultMatch(
+          tournamentId,
+          match.roundName,
+          nextRoundName,
+          history.teamIdB,
+        );
+      }
+
+      return message;
+    }, 20000);
+  } catch (error) {
+    console.log(error);
+  }
 }
 
-export { resultMatch , loopFind };
+export { resultMatch, loopFind };

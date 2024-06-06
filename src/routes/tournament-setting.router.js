@@ -60,7 +60,7 @@ router.post(
               tournamentId: +tournamentId,
               teamAId: randomTeam_A,
               teamBId: randomTeam_B,
-              roundName: `quater${i}`,
+              roundName: `quater-${i}`,
             },
           });
         }
