@@ -25,9 +25,9 @@ router.get('/team/:teamId', async (req, res, next) => {
     const pos = ['defender', 'strikerId', 'keeperId'];
 
     for (let i = 0; i < playerIds.length; i++) {
-      const owningPlayerId = +playerIds[i];
-      const findPlayer = await prisma.owningPlayer.findFirst({
-        where: { owningPlayerId },
+      const playerId = +playerIds[i];
+      const findPlayer = await prisma.player.findFirst({
+        where: { playerId },
       });
       const findName = await prisma.player.findFirst({
         where: { playerId: findPlayer.playerId },
@@ -108,9 +108,9 @@ router.patch('/team/:teamId', authMiddleware, async (req, res, next) => {
           teamId: +teamId,
         },
         data: {
-          defenderId: isExistDefender.owningPlayerId,
-          strikerId: isExistStriker.owningPlayerId,
-          keeperId: isExistKeeper.owningPlayerId,
+          defenderId: isExistDefender.playerId,
+          strikerId: isExistStriker.playerId,
+          keeperId: isExistKeeper.playerId,
         },
       });
 
@@ -120,21 +120,40 @@ router.patch('/team/:teamId', authMiddleware, async (req, res, next) => {
       );
 
       for (let i = 0; i < newInsertPlayers[0].length; i++) {
-        await tx.owningPlayer.update({
-          where: {
-            userId: userId,
-            owningPlayerId: newInsertPlayers[0][i].owningPlayerId,
-          },
-          data: { count: newInsertPlayers[0][i].count - 1 },
-        });
+        if (newInsertPlayers[0][i].count === 1) {
+          await tx.owningPlayer.delete({
+            where: {
+              userId: userId,
+              owningPlayerId: newInsertPlayers[0][i].owningPlayerId,
+            },
+          });
+        } else {
+          await tx.owningPlayer.update({
+            where: {
+              userId: userId,
+              owningPlayerId: newInsertPlayers[0][i].owningPlayerId,
+            },
+            data: { count: newInsertPlayers[0][i].count - 1 },
+          });
+        }
 
-        await tx.owningPlayer.update({
-          where: {
-            userId: userId,
-            owningPlayerId: newInsertPlayers[1][i].owningPlayerId,
-          },
-          data: { count: newInsertPlayers[1][i].count + 1 },
-        });
+        if (!newInsertPlayers[1][i]) {
+          await tx.owningPlayer.create({
+            data: {
+              userId,
+              playerId: newInsertPlayers[1][i].playerId,
+              grade: newInsertPlayers[1][i].grade,
+            },
+          });
+        } else {
+          await tx.owningPlayer.update({
+            where: {
+              userId: userId,
+              owningPlayerId: newInsertPlayers[1][i].owningPlayerId,
+            },
+            data: { count: newInsertPlayers[1][i].count + 1 },
+          });
+        }
       }
 
       return res.status(200).json({
@@ -185,13 +204,22 @@ router.post('/team', authMiddleware, async (req, res, next) => {
       ];
 
       for (let i = 0; i < 3; i++) {
-        await tx.owningPlayer.update({
-          where: {
-            userId: userId,
-            owningPlayerId: idArray[i].owningPlayerId,
-          },
-          data: { count: idArray[i].count - 1 },
-        });
+        if (idArray[i].count === 1) {
+          await tx.owningPlayer.delete({
+            where: {
+              userId: userId,
+              owningPlayerId: idArray[i].owningPlayerId,
+            },
+          });
+        } else {
+          await tx.owningPlayer.update({
+            where: {
+              userId: userId,
+              owningPlayerId: idArray[i].owningPlayerId,
+            },
+            data: { count: idArray[i].count - 1 },
+          });
+        }
       }
 
       return res
@@ -212,10 +240,10 @@ router.delete('/team/:teamId', authMiddleware, async (req, res, next) => {
       const playersId = await tx.team.findFirst({
         where: {
           userId: userId,
+          teamId: +teamId,
         },
       });
-
-      if (playersId.userId != userId)
+      if (!playersId)
         return res.status(401).json({ message: '권한이 없는 Id 입니다.' });
 
       const playersIdArray = [
@@ -225,30 +253,42 @@ router.delete('/team/:teamId', authMiddleware, async (req, res, next) => {
       ];
 
       for (let i = 0; i < 3; i++) {
+        const playerInfo = await tx.player.findFirst({
+          where: {
+            playerId: playersId[i],
+          },
+        });
         const players = await tx.owningPlayer.findFirst({
           where: {
             userId: userId,
-            owningPlayerId: playersIdArray[i],
+            playerId: playersIdArray[i],
           },
         });
 
-        await tx.owningPlayer.update({
-          where: {
-            userId: userId,
-            owningPlayerId: playersIdArray[i],
-          },
-          data: {
-            count: players.count + 1,
-          },
-        });
-
-        await tx.team.deleteMany({
-          where: {
-            teamId: +teamId,
-          },
-        });
+        if (!players) {
+          await tx.owningPlayer.create({
+            data: {
+              userId: userId,
+              playerId: playersIdArray[i],
+              grade: playerInfo.grade,
+            },
+          });
+        } else {
+          await tx.owningPlayer.update({
+            where: {
+              owningPlayerId: players.owningPlayerId,
+            },
+            data: {
+              count: players.count + 1,
+            },
+          });
+        }
       }
-
+      await tx.team.delete({
+        where: {
+          teamId: +teamId,
+        },
+      });
       return res
         .status(200)
         .json({ message: teamId + '번 팀이 삭제되었습니다.' });
@@ -262,30 +302,30 @@ async function Check(userId, defenderId, strikerId, keeperId) {
   const isExistDefender = await prisma.owningPlayer.findFirst({
     where: {
       userId: userId,
-      owningPlayerId: defenderId,
+      playerId: defenderId,
     },
   });
 
   const isExistStriker = await prisma.owningPlayer.findFirst({
     where: {
       userId: userId,
-      owningPlayerId: strikerId,
+      playerId: strikerId,
     },
   });
 
   const isExistKeeper = await prisma.owningPlayer.findFirst({
     where: {
       userId: userId,
-      owningPlayerId: keeperId,
+      playerId: keeperId,
     },
   });
 
   if (!isExistDefender || !isExistStriker || !isExistKeeper) return 'error_0';
 
   if (
-    isExistDefender.owningPlayerId == isExistStriker.owningPlayerId ||
-    isExistStriker.owningPlayerId == isExistKeeper.owningPlayerId ||
-    isExistKeeper.owningPlayerId == isExistDefender.owningPlayerId
+    isExistDefender.playerId == isExistStriker.playerId ||
+    isExistStriker.playerId == isExistKeeper.playerId ||
+    isExistKeeper.playerId == isExistDefender.playerId
   )
     return 'error_1';
 
@@ -304,21 +344,21 @@ async function OldPlayerFindforChange(userId, oldPlayersId) {
   const oldDefender = await prisma.owningPlayer.findFirst({
     where: {
       userId: userId,
-      owningPlayerId: oldPlayersId.defenderId,
+      playerId: oldPlayersId.defenderId,
     },
   });
 
   const oldStriker = await prisma.owningPlayer.findFirst({
     where: {
       userId: userId,
-      owningPlayerId: oldPlayersId.strikerId,
+      playerId: oldPlayersId.strikerId,
     },
   });
 
   const oldKeeper = await prisma.owningPlayer.findFirst({
     where: {
       userId: userId,
-      owningPlayerId: oldPlayersId.keeperId,
+      playerId: oldPlayersId.keeperId,
     },
   });
 
