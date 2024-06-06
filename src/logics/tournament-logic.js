@@ -103,53 +103,47 @@ async function resultMatch(tournamentId, roundName, nextRoundName, teamId) {
   }
 }
 
-async function loopFind(teamAId, teamBId, curTime) {
-  // Date 타입으로 찾는 부분에 무리가 있어서 안되는 거라면
-  // 그냥 Team B에 속해있는 선수는 새 API를 호출하는 식으로 진행하는게 나을듯
-  try {
+async function transactionFind(roundName, match) {
+  return new Promise((resolve, reject) => {
     setTimeout(async () => {
-      const t = new Date(curTime - 30 * 1000);
       const history = await prisma.matchHistory.findFirst({
         where: {
           OR: [
             {
-              teamIdA: teamAId,
-              teamIdB: teamBId,
+              teamIdA: match.teamAId,
+              teamIdB: match.teamBId,
             },
             {
-              teamIdA: teamBId,
-              teamIdB: teamAId,
+              teamIdA: match.teamBId,
+              teamIdB: match.teamAId,
             },
           ],
-          matchTime: {
-            gte: t,
-            lte: curTime,
-          },
+        },
+        orderBy: {
+          matchTime: 'desc',
         },
       });
 
       let message;
-      if (history.resultA === 'win') {
-        message = await resultMatch(
-          tournamentId,
-          match.roundName,
-          nextRoundName,
-          history.teamIdA,
-        );
+      if (roundName === 'final') {
+        if (history.resultA === 'win') {
+          message = 'Team ' + history.teamIdA + ' 님이 최종 우승하셨습니다!';
+        } else {
+          message = 'Team ' + history.teamIdB + ' 님이 최종 우승하셨습니다!';
+        }
       } else {
-        message = await resultMatch(
-          tournamentId,
-          match.roundName,
-          nextRoundName,
-          history.teamIdB,
-        );
+        if (history.resultA === 'win') {
+          message =
+            'Team ' + history.teamIdA + ' 님이 다음 라운드에 진출하셨습니다.';
+        } else {
+          message =
+            'Team ' + history.teamIdB + ' 님이 다음 라운드에 진출하셨습니다.';
+        }
       }
 
-      return message;
-    }, 20000);
-  } catch (error) {
-    console.log(error);
-  }
+      resolve(message);
+    }, 5000);
+  });
 }
 
-export { resultMatch, loopFind };
+export { resultMatch, transactionFind };
