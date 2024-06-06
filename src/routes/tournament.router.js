@@ -151,8 +151,8 @@ router.post('/tournament/match', authMiddleware, async (req, res, next) => {
           });
 
           let winnerId;
-          if (userTeam.userId === winnerUser.userId) {
-            winnerId = userTeam.teamId;
+          if (userId === winnerUser.userId) {
+            winnerId = teamId;
           } else {
             winnerId = otherTeamId;
           }
