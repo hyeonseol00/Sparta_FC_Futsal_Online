@@ -64,8 +64,8 @@ async function getMatchHistory(userId) {
         resultB: match.resultB,
         scoreChangeA: match.scoreChangeA,
         scoreChangeB: match.scoreChangeB,
-        teamAScore: teamAScore?.score || 0,
-        teamBScore: teamBScore?.score || 0,
+        teamAScore: match.teamAScore,
+        teamBScore: match.teamBScore,
         matchTime: match.matchTime,
       };
     }),
