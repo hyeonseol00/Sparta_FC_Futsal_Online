@@ -175,44 +175,49 @@ router.post(
             );
           } else {
             // team B 인 유저 요청일 때는 findFirst() -> 딜레이 -> 못찾으면 다시 findFirst() 찾으면 match history() 결과 받기
-            setTimeout(async () => {
-              const history = await prisma.matchHistory.findFirst({
-                where: {
-                  OR: [
-                    {
-                      teamIdA: match.teamAId,
-                      teamIdB: match.teamBId,
-                    },
-                    {
-                      teamIdA: match.teamBId,
-                      teamIdB: match.teamAId,
-                    },
-                  ],
-                },
-              });
+            //setTimeout(async () => {
+            const history = await prisma.matchHistory.findFirst({
+              where: {
+                OR: [
+                  {
+                    teamIdA: match.teamAId,
+                    teamIdB: match.teamBId,
+                  },
+                  {
+                    teamIdA: match.teamBId,
+                    teamIdB: match.teamAId,
+                  },
+                ],
+              },
+              orderBy: {
+                matchTime: 'desc',
+              },
+            });
 
-              if (roundName === 'final') {
-                if (history.resultA === 'win') {
-                  message =
-                    'Team ' + history.teamIdA + ' 님이 최종 우승하셨습니다!';
-                } else {
-                  message =
-                    'Team ' + history.teamIdB + ' 님이 최종 우승하셨습니다!';
-                }
+            console.log(history);
+
+            if (roundName === 'final') {
+              if (history.resultA === 'win') {
+                message =
+                  'Team ' + history.teamIdA + ' 님이 최종 우승하셨습니다!';
               } else {
-                if (history.resultA === 'win') {
-                  message =
-                    'Team ' +
-                    history.teamIdA +
-                    ' 님이 다음 라운드에 진출하셨습니다.';
-                } else {
-                  message =
-                    'Team ' +
-                    history.teamIdB +
-                    ' 님이 다음 라운드에 진출하셨습니다.';
-                }
+                message =
+                  'Team ' + history.teamIdB + ' 님이 최종 우승하셨습니다!';
               }
-            }, 20000);
+            } else {
+              if (history.resultA === 'win') {
+                message =
+                  'Team ' +
+                  history.teamIdA +
+                  ' 님이 다음 라운드에 진출하셨습니다.';
+              } else {
+                message =
+                  'Team ' +
+                  history.teamIdB +
+                  ' 님이 다음 라운드에 진출하셨습니다.';
+              }
+            }
+            //}, 20000);
           }
         } else {
           // 상대 팀 ready가 안되었을 때는 부전승처리
