@@ -191,20 +191,26 @@ router.post(
                 },
               });
 
-              if (history.resultA === 'win') {
-                message = await resultMatch(
-                  tournamentId,
-                  match.roundName,
-                  nextRoundName,
-                  history.teamIdA,
-                );
+              if (roundName === 'final') {
+                if (history.resultA === 'win') {
+                  message =
+                    'Team ' + history.teamIdA + ' 님이 최종 우승하셨습니다!';
+                } else {
+                  message =
+                    'Team ' + history.teamIdB + ' 님이 최종 우승하셨습니다!';
+                }
               } else {
-                message = await resultMatch(
-                  tournamentId,
-                  match.roundName,
-                  nextRoundName,
-                  history.teamIdB,
-                );
+                if (history.resultA === 'win') {
+                  message =
+                    'Team ' +
+                    history.teamIdA +
+                    ' 님이 다음 라운드에 진출하셨습니다.';
+                } else {
+                  message =
+                    'Team ' +
+                    history.teamIdB +
+                    ' 님이 다음 라운드에 진출하셨습니다.';
+                }
               }
             }, 20000);
           }
