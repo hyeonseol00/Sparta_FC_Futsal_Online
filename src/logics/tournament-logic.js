@@ -104,46 +104,46 @@ async function resultMatch(tournamentId, roundName, nextRoundName, teamId) {
 }
 
 async function transactionFind(roundName, match) {
-  setTimeout(async () => {
-    const history = await prisma.matchHistory.findFirst({
-      where: {
-        OR: [
-          {
-            teamIdA: match.teamAId,
-            teamIdB: match.teamBId,
-          },
-          {
-            teamIdA: match.teamBId,
-            teamIdB: match.teamAId,
-          },
-        ],
-      },
-      orderBy: {
-        matchTime: 'desc',
-      },
-    });
+  return new Promise((resolve, reject) => {
+    setTimeout(async () => {
+      const history = await prisma.matchHistory.findFirst({
+        where: {
+          OR: [
+            {
+              teamIdA: match.teamAId,
+              teamIdB: match.teamBId,
+            },
+            {
+              teamIdA: match.teamBId,
+              teamIdB: match.teamAId,
+            },
+          ],
+        },
+        orderBy: {
+          matchTime: 'desc',
+        },
+      });
 
-    let message;
-    if (roundName === 'final') {
-      if (history.resultA === 'win') {
-        message = 'Team ' + history.teamIdA + ' 님이 최종 우승하셨습니다!';
+      let message;
+      if (roundName === 'final') {
+        if (history.resultA === 'win') {
+          message = 'Team ' + history.teamIdA + ' 님이 최종 우승하셨습니다!';
+        } else {
+          message = 'Team ' + history.teamIdB + ' 님이 최종 우승하셨습니다!';
+        }
       } else {
-        message = 'Team ' + history.teamIdB + ' 님이 최종 우승하셨습니다!';
+        if (history.resultA === 'win') {
+          message =
+            'Team ' + history.teamIdA + ' 님이 다음 라운드에 진출하셨습니다.';
+        } else {
+          message =
+            'Team ' + history.teamIdB + ' 님이 다음 라운드에 진출하셨습니다.';
+        }
       }
-    } else {
-      if (history.resultA === 'win') {
-        message =
-          'Team ' + history.teamIdA + ' 님이 다음 라운드에 진출하셨습니다.';
-      } else {
-        message =
-          'Team ' + history.teamIdB + ' 님이 다음 라운드에 진출하셨습니다.';
-      }
-    }
 
-    console.log(history, message);
-
-    return message;
-  }, 5000);
+      resolve(message);
+    }, 5000);
+  });
 }
 
 export { resultMatch, transactionFind };
