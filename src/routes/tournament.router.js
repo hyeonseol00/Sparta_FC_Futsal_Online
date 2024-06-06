@@ -206,8 +206,6 @@ router.post(
                   history.teamIdB,
                 );
               }
-
-              return message;
             }, 20000);
           }
         } else {
