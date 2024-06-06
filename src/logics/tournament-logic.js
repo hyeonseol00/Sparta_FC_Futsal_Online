@@ -109,6 +109,9 @@ async function loopFind(teamAId, teamBId, curTime) {
   try {
     setTimeout(async () => {
       const t = new Date(curTime - 30 * 1000);
+
+      console.log(t);
+
       const history = await prisma.matchHistory.findFirst({
         where: {
           OR: [
