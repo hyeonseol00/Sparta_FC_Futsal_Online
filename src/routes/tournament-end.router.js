@@ -25,7 +25,11 @@ router.post('/tournament/end', async (req, res, next) => {
       },
     });
 
-    if (!tournament)
+    if (!tournamentId)
+      return res
+        .status(400)
+        .json({ errorMessage: '토너먼트 ID를 입력해주세요!' });
+    else if (!tournament)
       return res
         .status(404)
         .json({ errorMessage: '토너먼트를 찾을 수 없습니다.' });
@@ -37,10 +41,6 @@ router.post('/tournament/end', async (req, res, next) => {
       return res
         .status(404)
         .json({ errorMessage: '토너먼트가 아직 진행중입니다!' });
-    else if (!tournamentId)
-      return res
-        .status(400)
-        .json({ errorMessage: '토너먼트 ID를 입력해주세요!' });
 
     // 상품 수여
     const teamIds = [
