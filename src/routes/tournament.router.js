@@ -1,6 +1,6 @@
 import express from 'express';
 import { prisma } from '../utils/prisma/index.js';
-import { resultMatch, loopFind } from '../logics/tournament-logic.js';
+import { resultMatch, transactionFind } from '../logics/tournament-logic.js';
 import { playGame } from '../logics/game-play.logic.js';
 import authMiddleware from '../middlewares/auth.middleware.js';
 
@@ -175,7 +175,7 @@ router.post(
             );
           } else {
             // team B 인 유저 요청일 때는 findFirst() -> 딜레이 -> 못찾으면 다시 findFirst() 찾으면 match history() 결과 받기
-            message = await loopFind(+teamId, otherTeamId, new Date());
+            message = await transactionFind(+teamId, otherTeamId);
           }
         } else {
           // 상대 팀 ready가 안되었을 때는 부전승처리

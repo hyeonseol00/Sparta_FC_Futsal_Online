@@ -103,15 +103,11 @@ async function resultMatch(tournamentId, roundName, nextRoundName, teamId) {
   }
 }
 
-async function loopFind(teamAId, teamBId, curTime) {
+async function transactionFind(teamAId, teamBId) {
   // Date 타입으로 찾는 부분에 무리가 있어서 안되는 거라면
   // 그냥 Team B에 속해있는 선수는 새 API를 호출하는 식으로 진행하는게 나을듯
   try {
     setTimeout(async () => {
-      const t = new Date(curTime - 30 * 1000);
-
-      console.log(t);
-
       const history = await prisma.matchHistory.findFirst({
         where: {
           OR: [
@@ -124,10 +120,6 @@ async function loopFind(teamAId, teamBId, curTime) {
               teamIdB: teamAId,
             },
           ],
-          matchTime: {
-            gte: t,
-            lte: curTime,
-          },
         },
       });
 
@@ -155,4 +147,4 @@ async function loopFind(teamAId, teamBId, curTime) {
   }
 }
 
-export { resultMatch, loopFind };
+export { resultMatch, transactionFind };
