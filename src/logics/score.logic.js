@@ -10,10 +10,19 @@ const weight = {
 };
 
 // 유저 승리 시 점수 업데이트 및 기록 저장 함수
-export const handleWin = async (userId, opponentId, teamIdA, teamIdB, aScore, bScore) => {
+export const handleWin = async (
+  userId,
+  opponentId,
+  teamIdA,
+  teamIdB,
+  aScore,
+  bScore,
+) => {
   try {
     const userRecord = await prisma.record.findUnique({ where: { userId } });
-    const opponentRecord = await prisma.record.findUnique({ where: { userId: opponentId } });
+    const opponentRecord = await prisma.record.findUnique({
+      where: { userId: opponentId },
+    });
 
     await prisma.$transaction(
       async (tx) => {
@@ -65,8 +74,6 @@ export const handleWin = async (userId, opponentId, teamIdA, teamIdB, aScore, bS
 
         await tx.matchHistory.create({
           data: {
-            userIdA: userId,
-            userIdB: opponentId,
             teamIdA,
             teamIdB,
             resultA: 'win',
@@ -94,7 +101,9 @@ export const handleWin = async (userId, opponentId, teamIdA, teamIdB, aScore, bS
 export const handleLose = async (userId, opponentId, teamIdA, teamIdB) => {
   try {
     const userRecord = await prisma.record.findUnique({ where: { userId } });
-    const opponentRecord = await prisma.record.findUnique({ where: { userId: opponentId } });
+    const opponentRecord = await prisma.record.findUnique({
+      where: { userId: opponentId },
+    });
 
     const updatedUserScore = userRecord.score - 10;
     const updatedOpponentScore = opponentRecord.score + 10;
@@ -139,7 +148,9 @@ export const handleLose = async (userId, opponentId, teamIdA, teamIdB) => {
 export const handleDraw = async (userId, opponentId, teamIdA, teamIdB) => {
   try {
     const userRecord = await prisma.record.findUnique({ where: { userId } });
-    const opponentRecord = await prisma.record.findUnique({ where: { userId: opponentId } });
+    const opponentRecord = await prisma.record.findUnique({
+      where: { userId: opponentId },
+    });
 
     await prisma.record.update({
       where: { userId },

@@ -19,48 +19,26 @@ async function playGame(userATeamId, userBTeamId) {
     where: { teamId: +userBTeamId },
   });
 
-  const userATeamOwningPlayer = {
-    striker: await prisma.owningPlayer.findFirst({
-      where: { owningPlayerId: +userATeamList.strikerId },
-    }),
-    defender: await prisma.owningPlayer.findFirst({
-      where: { owningPlayerId: +userATeamList.defenderId },
-    }),
-    keeper: await prisma.owningPlayer.findFirst({
-      where: { owningPlayerId: +userATeamList.keeperId },
-    }),
-  };
-  const userBTeamOwningPlayer = {
-    striker: await prisma.owningPlayer.findFirst({
-      where: { owningPlayerId: +userBTeamList.strikerId },
-    }),
-    defender: await prisma.owningPlayer.findFirst({
-      where: { owningPlayerId: +userBTeamList.defenderId },
-    }),
-    keeper: await prisma.owningPlayer.findFirst({
-      where: { owningPlayerId: +userBTeamList.keeperId },
-    }),
-  };
   const userATeam = {
     striker: await prisma.player.findFirst({
-      where: { playerId: +userATeamOwningPlayer.striker.playerId },
+      where: { playerId: +userATeamList.strikerId },
     }),
     defender: await prisma.player.findFirst({
-      where: { playerId: +userATeamOwningPlayer.defender.playerId },
+      where: { playerId: +userATeamList.defenderId },
     }),
     keeper: await prisma.player.findFirst({
-      where: { playerId: +userATeamOwningPlayer.keeper.playerId },
+      where: { playerId: +userATeamList.keeperId },
     }),
   };
   const userBTeam = {
     striker: await prisma.player.findFirst({
-      where: { playerId: +userBTeamOwningPlayer.striker.playerId },
+      where: { playerId: +userBTeamList.strikerId },
     }),
     defender: await prisma.player.findFirst({
-      where: { playerId: +userBTeamOwningPlayer.defender.playerId },
+      where: { playerId: +userBTeamList.defenderId },
     }),
     keeper: await prisma.player.findFirst({
-      where: { playerId: +userBTeamOwningPlayer.keeper.playerId },
+      where: { playerId: +userBTeamList.keeperId },
     }),
   };
 
@@ -119,11 +97,25 @@ async function playGame(userATeamId, userBTeamId) {
 
   const randomValue = Math.random() * scoreSum;
   if (randomValue < userATeamPower) {
-    await handleWin(userA.userId, userB.userId, userATeamId, userBTeamId, aScore, bScore);
+    await handleWin(
+      userA.userId,
+      userB.userId,
+      userATeamId,
+      userBTeamId,
+      aScore,
+      bScore,
+    );
 
     return `${userA.userName} 승리: ${userA.userName} ${aScore} - ${bScore} ${userB.userName}`;
   } else {
-    await handleWin(userB.userId, userA.userId, userBTeamId, userATeamId, aScore, bScore);
+    await handleWin(
+      userB.userId,
+      userA.userId,
+      userBTeamId,
+      userATeamId,
+      aScore,
+      bScore,
+    );
 
     return `${userB.userName} 승리: ${userB.userName} ${aScore} - ${bScore} ${userA.userName}`;
   }
