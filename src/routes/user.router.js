@@ -13,21 +13,29 @@ router.post('/sign-up', async (req, res, next) => {
     const { userId, userPw, userPwCheck, userName } = req.body;
 
     if (!userId || !userPw || !userPwCheck || !userName) {
-      return res.status(400).json({ message: '데이터를 올바르게 입력해주세요.' });
+      return res
+        .status(400)
+        .json({ message: '데이터를 올바르게 입력해주세요.' });
     }
 
     //소문자 + 숫자 vaildation
     const idVaildation = /^[a-z0-9]+$/;
     if (!idVaildation.test(userId)) {
-      return res.status(400).json({ message: '아이디는 소문자 + 숫자 조합으로 만들어주세요.' });
+      return res
+        .status(400)
+        .json({ message: '아이디는 소문자 + 숫자 조합으로 만들어주세요.' });
     }
 
     if (userPw.length < 6) {
-      return res.status(400).json({ message: '비밀번호는 6자 이상으로 만들어주세요.' });
+      return res
+        .status(400)
+        .json({ message: '비밀번호는 6자 이상으로 만들어주세요.' });
     }
 
     if (userPw !== userPwCheck) {
-      return res.status(400).json({ message: '비밀번호 확인이 일치하지 않습니다.' });
+      return res
+        .status(400)
+        .json({ message: '비밀번호 확인이 일치하지 않습니다.' });
     }
 
     const isExistUser = await prisma.user.findFirst({
@@ -85,7 +93,9 @@ router.post('/sign-in', async (req, res, next) => {
   try {
     const { userId, userPw } = req.body;
     if (!userId || !userPw) {
-      return res.status(400).json({ message: '데이터를 올바르게 입력해주세요.' });
+      return res
+        .status(400)
+        .json({ message: '데이터를 올바르게 입력해주세요.' });
     }
 
     const user = await prisma.user.findFirst({
@@ -119,9 +129,9 @@ router.post('/sign-in', async (req, res, next) => {
 });
 
 // 캐시 구매 API
-router.patch('/user/:userId/showMeTheMoney', authMiddleware, async (req, res, next) => {
+router.patch('/user/showMeTheMoney', authMiddleware, async (req, res, next) => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.user;
 
     const user = await prisma.user.findFirst({
       where: {
@@ -129,7 +139,9 @@ router.patch('/user/:userId/showMeTheMoney', authMiddleware, async (req, res, ne
       },
     });
     if (!user) {
-      return res.status(401).json({ message: '해당 유저가 존재하지 않습니다.' });
+      return res
+        .status(401)
+        .json({ message: '해당 유저가 존재하지 않습니다.' });
     }
 
     const updateUser = await prisma.user.update({
@@ -184,7 +196,7 @@ router.patch('/user/pickup', authMiddleware, async (req, res, next) => {
     }
 
     // 현재 시간을 기준으로 랜덤 인덱스값 설정
-    const randomIndex = ((new Date().getTime())*11+1) % players.length; //강화가 0인 배열만 랜덤으로 가져오기
+    const randomIndex = (new Date().getTime() * 11 + 1) % players.length; //강화가 0인 배열만 랜덤으로 가져오기
     const randomPlayer = players[randomIndex];
 
     // 유저 정보와 보유 선수 업데이트
@@ -239,7 +251,9 @@ router.patch('/user/pickup', authMiddleware, async (req, res, next) => {
       },
     });
 
-    return res.status(200).json({ user: updatedUser, pickedPlayer: randomPlayer });
+    return res
+      .status(200)
+      .json({ user: updatedUser, pickedPlayer: randomPlayer });
   } catch (error) {
     next(error);
   }

@@ -170,7 +170,6 @@ router.get('/owning-player', authMiddleware, async (req, res, next) => {
         userId,
       },
       select: {
-        owningPlayerId: true,
         playerId: true,
         grade: true,
         count: true,

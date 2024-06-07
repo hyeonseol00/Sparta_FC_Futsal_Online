@@ -1,12 +1,10 @@
 generator client {
   provider = "prisma-client-js"
 }
-
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
-
 model user {
   userId        String         @id @map("user_id")
   userName      String         @unique @map("user_name")
@@ -15,10 +13,8 @@ model user {
   owningPlayer  owningPlayer[]
   record        record?
   team          team[]
-
   @@map("user")
 }
-
 model player {
   playerId     Int            @unique @default(autoincrement()) @map("player_id")
   playerName   String         @map("player_name")
@@ -33,11 +29,9 @@ model player {
   keeper         team[]       @relation("KeeperRelation")
   striker        team[]       @relation("StrikerRelation")
   tournament   tournament[]
-
   @@id([playerId, grade])
   @@map("player")
 }
-
 model owningPlayer {
   owningPlayerId Int    @id @default(autoincrement()) @map("owning_player_id")
   userId         String @map("user_id")
@@ -46,12 +40,10 @@ model owningPlayer {
   count          Int    @default(1) @map("count")
   player         player @relation(fields: [playerId, grade], references: [playerId, grade], onDelete: Cascade)
   user           user   @relation(fields: [userId], references: [userId], onDelete: Cascade)
-
   @@index([playerId, grade], map: "owning_player_player_id_grade_fkey")
   @@index([userId], map: "owning_player_user_id_fkey")
   @@map("owning_player")
 }
-
 model team {
   teamId                                                         Int                @id @default(autoincrement()) @map("team_id")
   userId                                                         String             @map("user_id")
@@ -68,15 +60,12 @@ model team {
   tournamentEntry                                                tournamentEntry[]
   team_entry_a        tournamentMatch[] @relation("match_team_a")
   team_entry_b        tournamentMatch[] @relation("match_team_b")
-
   @@index([defenderId], map: "team_defender_id_fkey")
   @@index([keeperId], map: "team_keeper_id_fkey")
   @@index([strikerId], map: "team_striker_id_fkey")
   @@index([userId], map: "team_user_id_fkey")
-
   @@map("team")
 }
-
 model record {
   userId String @id @map("user_id")
   score  Int    @default(1000) @map("score")
@@ -85,10 +74,8 @@ model record {
   draw   Int    @default(0) @map("draw")
   ranking Int    @map("ranking")
   user   user   @relation(fields: [userId], references: [userId], onDelete: Cascade)
-
   @@map("record")
 }
-
 model matchHistory {
   matchId      Int      @id @default(autoincrement()) @map("match_id")
   teamIdA      Int      @map("team_id_a")
@@ -100,53 +87,43 @@ model matchHistory {
   matchTime    DateTime @default(now()) @map("match_time")
   teamAScore   Int      @map("team_a_score")
   teamBScore   Int      @map("team_b_score")
-  teamA        team     @relation("teamAMatches", fields: [teamIdA], references: [teamId])
-  teamB        team     @relation("teamBMatches", fields: [teamIdB], references: [teamId])
-
-
+  teamA        team     @relation("teamAMatches", fields: [teamIdA], references: [teamId], onDelete: Cascade)
+  teamB        team     @relation("teamBMatches", fields: [teamIdB], references: [teamId], onDelete: Cascade)
   @@index([teamIdA], map: "match_history_team_id_a_fkey")
   @@index([teamIdB], map: "match_history_team_id_b_fkey")
   @@map("match_history")
 }
-
 model tournament {
   tournamentId        Int               @id @unique(map: "tournament_id_UNIQUE") @default(autoincrement()) @map("tournament_id")
   scheduledTime       DateTime          @db.DateTime(0) @map("scheduled_time")
-  currentRound        String            @default("quater")      @map("current_round")
+  currentRound        String            @default("start")      @map("current_round")
   winnerTeamId	      Int?				      @map("winner_team_id")
   rewardPlayerId      Int				        @map("reward_player_id")
   rewardPlayerGrade	  Int				        @map("reward_player_grade")
-  player              player            @relation(fields: [rewardPlayerId, rewardPlayerGrade], references: [playerId, grade], onDelete: NoAction, onUpdate: NoAction, map: "reward_player_id_fkey")
-  team                team?             @relation(fields: [winnerTeamId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "winner_team_id_fkey")
+  player              player            @relation(fields: [rewardPlayerId, rewardPlayerGrade], references: [playerId, grade], onDelete: Cascade, onUpdate: NoAction, map: "reward_player_id_fkey")
+  team                team?             @relation(fields: [winnerTeamId], references: [teamId], onDelete: Cascade, onUpdate: NoAction, map: "winner_team_id_fkey")
   tournament_entry    tournamentEntry[]
   tournament_match    tournamentMatch[]
-
   @@index([rewardPlayerId, rewardPlayerGrade], map: "reward_player_id_fkey_idx")
   @@index([winnerTeamId], map: "winner_team_id_fkey_idx")
 }
-
 model tournamentEntry {
   tournamentEntryId   Int        @id @default(autoincrement())    @map("tournament_entry_id")
   tournamentId        Int                                         @map("tournament_id")
   teamId              Int		                                      @map("team_id")
   ready               Int        @db.TinyInt    @default(0)       @map("ready")
-
-  tournament    tournament      @relation(fields: [tournamentId], references: [tournamentId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_entry_id_fkey")
-  team          team            @relation(fields: [teamId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "entry_team_id_fkey")
-
+  tournament    tournament      @relation(fields: [tournamentId], references: [tournamentId], onDelete: Cascade, onUpdate: NoAction, map: "tournament_entry_id_fkey")
+  team          team            @relation(fields: [teamId], references: [teamId], onDelete: Cascade, onUpdate: NoAction, map: "entry_team_id_fkey")
   @@map("tournament_entry")
 }
-
 model tournamentMatch {
   tournamentMatchId   Int     @id   @default(autoincrement())   @map("tournament_match_id")
   tournamentId        Int                                       @map("tournament_id")
   roundName           String        @default("quater")          @map("roundName")
   teamAId             Int?                                       @map("teamA_id")
   teamBId             Int?                                       @map("teamB_id")
-
-  tournament    tournament      @relation(fields: [tournamentId], references: [tournamentId], onDelete: NoAction, onUpdate: NoAction, map: "tournament_match_id_fkey")
-  team_a        team?           @relation("match_team_a", fields: [teamAId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "team_a_match_id_fkey")
-  team_b        team?           @relation("match_team_b", fields: [teamBId], references: [teamId], onDelete: NoAction, onUpdate: NoAction, map: "team_b_match_id_fkey")
-
+  tournament    tournament      @relation(fields: [tournamentId], references: [tournamentId], onDelete: Cascade, onUpdate: NoAction, map: "tournament_match_id_fkey")
+  team_a        team?           @relation("match_team_a", fields: [teamAId], references: [teamId], onDelete: Cascade, onUpdate: NoAction, map: "team_a_match_id_fkey")
+  team_b        team?           @relation("match_team_b", fields: [teamBId], references: [teamId], onDelete: Cascade, onUpdate: NoAction, map: "team_b_match_id_fkey")
   @@map("tournament_match")
 }
