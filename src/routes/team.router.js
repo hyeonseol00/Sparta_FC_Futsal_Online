@@ -101,6 +101,19 @@ router.patch('/team/:teamId', authMiddleware, async (req, res, next) => {
       players.find((player) => playerId == player.playerId),
     );
 
+    const oldStriker = await prisma.player.findFirst({
+      where: { playerId: oldPlayersId.strikerId },
+    });
+    const oldDefender = await prisma.player.findFirst({
+      where: { playerId: oldPlayersId.defenderId },
+    });
+
+    const oldKeeper = await prisma.player.findFirst({
+      where: { playerId: oldPlayersId.keeperId },
+    });
+
+    const oldTeam = [oldStriker, oldDefender, oldKeeper];
+
     await prisma.$transaction(async (tx) => {
       await tx.team.update({
         where: {
@@ -141,8 +154,8 @@ router.patch('/team/:teamId', authMiddleware, async (req, res, next) => {
           await tx.owningPlayer.create({
             data: {
               userId,
-              playerId: newInsertPlayers[1][i].playerId,
-              grade: newInsertPlayers[1][i].grade,
+              playerId: oldTeam[i].playerId,
+              grade: oldTeam[i].grade,
             },
           });
         } else {
@@ -368,6 +381,7 @@ async function OldPlayerFindforChange(userId, oldPlayersId) {
 async function RemoveSamePlayerId(arr1, arr2) {
   for (let i = 0; i < arr1.length; i++) {
     for (let k = 0; k < arr2.length; k++) {
+      if (!arr2[k]) continue;
       if (arr1[i].owningPlayerId == arr2[k].owningPlayerId) {
         arr1.splice(i, 1);
         arr2.splice(k, 1);
