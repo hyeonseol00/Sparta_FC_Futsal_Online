@@ -46,11 +46,11 @@ router.post('/tournament/match', authMiddleware, async (req, res, next) => {
         userId,
       },
     });
-
+    const teamIds = userTeams.map((team) => team.teamId);
     const entry = await prisma.tournamentEntry.findFirst({
       where: {
         tournamentId,
-        teamId: { in: userTeams.teamId },
+        teamId: { in: teamIds },
       },
     });
     if (!entry) {
