@@ -9,23 +9,38 @@ router.post('/tournament/end', async (req, res, next) => {
   try {
     const { tournamentId } = req.body;
 
-    const tournament = await prisma.tournament.findFirst({ where: { tournamentId } });
+    const tournament = await prisma.tournament.findFirst({
+      where: { tournamentId },
+    });
     const tournamentSemiMatch = await prisma.tournamentMatch.findMany({
       where: {
         tournamentId,
-        roundName: 'semi',
+        roundName: { contains: 'semi' },
       },
     });
     const tournamentFinalMatch = await prisma.tournamentMatch.findFirst({
       where: {
         tournamentId,
-        roundName: 'final',
+        roundName: { contains: 'final' },
       },
     });
 
-    if (!tournament) return res.status(404).json({ errorMessage: '토너먼트를 찾을 수 없습니다.' });
-    else if (tournament.winnerTeamId == null)
-      return res.status(404).json({ errorMessage: '토너먼트가 아직 진행중입니다!' });
+    if (!tournamentId)
+      return res
+        .status(400)
+        .json({ errorMessage: '토너먼트 ID를 입력해주세요!' });
+    else if (!tournament)
+      return res
+        .status(404)
+        .json({ errorMessage: '토너먼트를 찾을 수 없습니다.' });
+    else if (tournament.currentRound == 'closed')
+      return res
+        .status(404)
+        .json({ errorMessage: '이미 종료된 토너먼트입니다!' });
+    else if (tournament.currentRound != 'finish')
+      return res
+        .status(404)
+        .json({ errorMessage: '토너먼트가 아직 진행중입니다!' });
 
     // 상품 수여
     const teamIds = [
@@ -48,10 +63,18 @@ router.post('/tournament/end', async (req, res, next) => {
       else thirdTeamBId = teamIds[i];
     }
 
-    const firstTeam = await prisma.team.findFirst({ where: { teamId: firstTeamId } });
-    const secondTeam = await prisma.team.findFirst({ where: { teamId: secondTeamId } });
-    const thirdATeam = await prisma.team.findFirst({ where: { teamId: thirdTeamAId } });
-    const thirdBTeam = await prisma.team.findFirst({ where: { teamId: thirdTeamBId } });
+    const firstTeam = await prisma.team.findFirst({
+      where: { teamId: firstTeamId },
+    });
+    const secondTeam = await prisma.team.findFirst({
+      where: { teamId: secondTeamId },
+    });
+    const thirdATeam = await prisma.team.findFirst({
+      where: { teamId: thirdTeamAId },
+    });
+    const thirdBTeam = await prisma.team.findFirst({
+      where: { teamId: thirdTeamBId },
+    });
 
     const firstUserOwningPlayer = await prisma.owningPlayer.findFirst({
       where: {
@@ -162,6 +185,15 @@ router.post('/tournament/end', async (req, res, next) => {
             },
           });
         }
+
+        await tx.tournament.update({
+          data: {
+            currentRound: 'closed',
+          },
+          where: {
+            tournamentId,
+          },
+        });
       },
       {
         isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
