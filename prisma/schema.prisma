@@ -83,7 +83,7 @@ model record {
   win    Int    @default(0) @map("win")
   lose   Int    @default(0) @map("lose")
   draw   Int    @default(0) @map("draw")
-  rank   Int    @map("rank")
+  ranking Int    @map("ranking")
   user   user   @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
   @@map("record")
