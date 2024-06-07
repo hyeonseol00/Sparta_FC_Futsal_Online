@@ -244,72 +244,72 @@ router.post('/team', authMiddleware, async (req, res, next) => {
   }
 });
 
-router.delete('/team/:teamId', authMiddleware, async (req, res, next) => {
-  try {
-    const { teamId } = req.params;
-    const userId = req.user.userId;
+// router.delete('/team/:teamId', authMiddleware, async (req, res, next) => {
+//   try {
+//     const { teamId } = req.params;
+//     const userId = req.user.userId;
 
-    await prisma.$transaction(async (tx) => {
-      const playersId = await tx.team.findFirst({
-        where: {
-          userId: userId,
-          teamId: +teamId,
-        },
-      });
-      if (!playersId)
-        return res.status(401).json({ message: '권한이 없는 Id 입니다.' });
+//     await prisma.$transaction(async (tx) => {
+//       const playersId = await tx.team.findFirst({
+//         where: {
+//           userId: userId,
+//           teamId: +teamId,
+//         },
+//       });
+//       if (!playersId)
+//         return res.status(401).json({ message: '권한이 없는 Id 입니다.' });
 
-      const playersIdArray = [
-        playersId.defenderId,
-        playersId.strikerId,
-        playersId.keeperId,
-      ];
+//       const playersIdArray = [
+//         playersId.defenderId,
+//         playersId.strikerId,
+//         playersId.keeperId,
+//       ];
 
-      for (let i = 0; i < 3; i++) {
-        const playerInfo = await tx.player.findFirst({
-          where: {
-            playerId: playersId[i],
-          },
-        });
-        const players = await tx.owningPlayer.findFirst({
-          where: {
-            userId: userId,
-            playerId: playersIdArray[i],
-          },
-        });
+//       for (let i = 0; i < 3; i++) {
+//         const playerInfo = await tx.player.findFirst({
+//           where: {
+//             playerId: playersIdArray[i],
+//           },
+//         });
+//         const players = await tx.owningPlayer.findFirst({
+//           where: {
+//             userId: userId,
+//             playerId: playersIdArray[i],
+//           },
+//         });
 
-        if (!players) {
-          await tx.owningPlayer.create({
-            data: {
-              userId: userId,
-              playerId: playersIdArray[i],
-              grade: playerInfo.grade,
-            },
-          });
-        } else {
-          await tx.owningPlayer.update({
-            where: {
-              owningPlayerId: players.owningPlayerId,
-            },
-            data: {
-              count: players.count + 1,
-            },
-          });
-        }
-      }
-      await tx.team.delete({
-        where: {
-          teamId: +teamId,
-        },
-      });
-      return res
-        .status(200)
-        .json({ message: teamId + '번 팀이 삭제되었습니다.' });
-    });
-  } catch (error) {
-    next(error);
-  }
-});
+//         if (!players) {
+//           await tx.owningPlayer.create({
+//             data: {
+//               userId: userId,
+//               playerId: playersIdArray[i],
+//               grade: playerInfo.grade,
+//             },
+//           });
+//         } else {
+//           await tx.owningPlayer.update({
+//             where: {
+//               owningPlayerId: players.owningPlayerId,
+//             },
+//             data: {
+//               count: players.count + 1,
+//             },
+//           });
+//         }
+//       }
+//       await tx.team.delete({
+//         where: {
+//           teamId: +teamId,
+//         },
+//       });
+//       return res
+//         .status(200)
+//         .json({ message: teamId + '번 팀이 삭제되었습니다.' });
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// });
 
 async function Check(userId, defenderId, strikerId, keeperId) {
   const isExistDefender = await prisma.owningPlayer.findFirst({
