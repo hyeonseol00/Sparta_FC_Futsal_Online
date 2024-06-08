@@ -15,6 +15,7 @@ async function getMatchHistory(userId) {
     where: {
       userId: userId,
     },
+    select: { teamId: true },
   });
 
   if (userTeams.length === 0) {
@@ -30,47 +31,56 @@ async function getMatchHistory(userId) {
       OR: [{ teamIdA: { in: teamIds } }, { teamIdB: { in: teamIds } }],
     },
     include: {
-      teamA: true,
-      teamB: true,
+      teamA: { select: { userId: true } },
+      teamB: { select: { userId: true } },
     },
-    orderBy: {
-      matchTime: 'desc',
-    },
+    orderBy: { matchTime: 'desc' },
   });
 
   if (matches.length === 0) {
     throw new Error('경기 기록이 없습니다!');
   }
 
-  console.log('Matches found:', matches); // 로깅 추가
+  const userIds = matches.flatMap(match => [match.teamA.userId, match.teamB.userId]);
+  const userScores = await prisma.record.findMany({
+    where: { userId: { in: userIds } },
+    select: { userId: true, score: true },
+  });
+
+  const scoreMap = new Map(userScores.map(user => [user.userId, user.score]));
 
   // 각 팀의 기록을 조회하여 점수 변동을 실시간 반영
-  const formattedMatches = await Promise.all(
-    matches.map(async (match) => {
-      const teamAScore = await prisma.record.findUnique({
-        where: { userId: match.teamA.userId },
-        select: { score: true },
-      });
-
-      const teamBScore = await prisma.record.findUnique({
-        where: { userId: match.teamB.userId },
-        select: { score: true },
-      });
-
-      return {
-        teamIdA: match.teamIdA,
-        teamIdB: match.teamIdB,
-        resultA: match.resultA,
-        resultB: match.resultB,
-        scoreChangeA: match.scoreChangeA,
-        scoreChangeB: match.scoreChangeB,
-        teamAScore: match.teamAScore,
-        teamBScore: match.teamBScore,
-        matchTime: match.matchTime,
-      };
-    }),
-  );
+  const formattedMatches = matches.map((match) => ({
+    teamIdA: match.teamIdA,
+    teamIdB: match.teamIdB,
+    resultA: match.resultA,
+    resultB: match.resultB,
+    scoreChangeA: match.scoreChangeA,
+    scoreChangeB: match.scoreChangeB,
+    teamAScore: scoreMap.get(match.teamA.userId) || 0,
+    teamBScore: scoreMap.get(match.teamB.userId) || 0,
+    matchTime: match.matchTime,
+  }));
 
   return formattedMatches;
 }
-export { getMatchHistory };
+
+async function getTournamentMatchHistory(teamAId, teamBId, curTime) {
+  const t = curTime - 10 * 1000;
+  const history = await prisma.matchHistory.findFirst({
+    where: {
+      OR: [
+        { teamIdA: { in: teamAId }, teamIdB: { in: teamBId } },
+        { teamIdA: { in: teamBId }, teamIdB: { in: teamAId } },
+      ],
+      matchTime: {
+        gte: t,
+        lte: curTime,
+      },
+    },
+  });
+
+  return history;
+}
+
+export { getMatchHistory, getTournamentMatchHistory };
