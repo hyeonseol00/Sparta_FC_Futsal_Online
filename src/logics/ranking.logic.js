@@ -7,13 +7,20 @@ export const storeRankings = async () => {
       orderBy: { score: 'desc' },
     });
 
-    for (let i = 0; i < rankings.length; i++) {
-      await prisma.record.update({
-        where: { userId: rankings[i].userId },
-        data: { rank: i + 1 },
-      });
-    }
+    const updates = rankings.map((ranking, index) => ({
+      userId: ranking.userId,
+      ranking: index + 1,
+    }));
 
+    const query = `
+      UPDATE record
+      SET ranking = CASE userId
+        ${updates.map((update) => `WHEN '${update.userId}' THEN ${update.ranking}`).join('\n')}
+      END
+      WHERE userId IN (${updates.map((update) => `'${update.userId}'`).join(', ')});
+    `;
+
+    await prisma.$executeRawUnsafe(query);
     console.log("랭킹 업데이트가 완료되었습니다.");
   } catch (err) {
     console.error("랭킹 업데이트 중 오류가 발생했습니다 ! :", err);
@@ -26,12 +33,12 @@ export const getRankings = async (req, res, next) => {
     await storeRankings(); // 랭킹을 조회하기 전에 항상 업데이트
 
     const rankings = await prisma.record.findMany({
-      orderBy: { rank: 'asc' },
+      orderBy: { ranking: 'asc' },
       include: { user: true },
     });
 
     const formattedRankings = rankings.map((record) => ({
-      rank: record.rank,
+      ranking: record.ranking,
       user_id: record.userId,
       user_name: record.user.userName,
       score: record.score,
