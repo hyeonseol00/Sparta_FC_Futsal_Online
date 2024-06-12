@@ -14,32 +14,41 @@ router.get('/team/:teamId', async (req, res, next) => {
     if (!findTeam)
       return res.status(404).json({ message: '존재하지 않는 팀입니다.' });
 
-    const { defenderId, strikerId, keeperId } = findTeam;
-    if (!defenderId || !strikerId || !keeperId)
+    const playerIds = [
+      findTeam.defenderId,
+      findTeam.strikerId,
+      findTeam.keeperId,
+    ];
+    if (!playerIds[0] || !playerIds[1] || !playerIds[2])
       return res
         .status(404)
         .json({ message: '현재 팀 구성에 오류가 있습니다.' });
 
-    const content = [];
-    const playerIds = [defenderId, strikerId, keeperId];
-    const pos = ['defender', 'strikerId', 'keeperId'];
+    const players = await prisma.player.findMany({
+      where: {
+        OR: [
+          { playerId: findTeam.defenderId },
+          { playerId: findTeam.strikerId },
+          { playerId: findTeam.keeperId },
+        ],
+      },
+      select: {
+        playerId: true,
+        playerName: true,
+        grade: true,
+      },
+    });
 
-    for (let i = 0; i < playerIds.length; i++) {
-      const playerId = +playerIds[i];
-      const findPlayer = await prisma.player.findFirst({
-        where: { playerId },
-      });
-      const findName = await prisma.player.findFirst({
-        where: { playerId: findPlayer.playerId },
-        select: { playerName: true },
-      });
+    let playersInfo = playerIds.map((id) =>
+      players.find((player) => player.playerId == id),
+    );
 
-      content.push(
-        `역할 : ${pos[i]} / 이름: ${findName.playerName} / 등급 : ${findPlayer.grade}`,
-      );
+    const pos = ['수비수', '공격수', '키퍼'];
+    for (let i = 0; i < 3; i++) {
+      playersInfo[i].pos = pos[i];
     }
 
-    return res.status(200).json({ '팀 구성': content });
+    return res.status(200).json({ '팀 구성': playersInfo });
   } catch (error) {
     next(error);
   }
@@ -268,7 +277,7 @@ router.delete('/team/:teamId', authMiddleware, async (req, res, next) => {
       for (let i = 0; i < 3; i++) {
         const playerInfo = await tx.player.findFirst({
           where: {
-            playerId: playersId[i],
+            playerId: playersIdArray[i],
           },
         });
         const players = await tx.owningPlayer.findFirst({
@@ -290,6 +299,7 @@ router.delete('/team/:teamId', authMiddleware, async (req, res, next) => {
           await tx.owningPlayer.update({
             where: {
               owningPlayerId: players.owningPlayerId,
+              playerId: playersIdArray[i],
             },
             data: {
               count: players.count + 1,
